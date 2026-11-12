@@ -1,0 +1,41 @@
+# docker compose up -d   ← قاعدة البيانات والموقع
+# أول مرة بس: docker compose run --rm tools npm run create-admin -- --username ali --name "علي جبر"
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: visits
+      POSTGRES_USER: visits
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-me}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U visits -d visits"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: { context: ., target: runner }
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql://visits:${DB_PASSWORD:-change-me}@db:5432/visits
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+  tools:
+    build: { context: ., target: tools }
+    profiles: ["tools"]
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql://visits:${DB_PASSWORD:-change-me}@db:5432/visits
+
+volumes:
+  db-data:
