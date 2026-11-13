@@ -1,0 +1,22 @@
+{
+  "packageId": "ps.jawwal.ambassadors",
+  "host": "visits.example.ps",
+  "name": "زيارات السفراء — جوال",
+  "launcherName": "الميدان",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#115D92",
+  "navigationColor": "#115D92",
+  "backgroundColor": "#FFFFFF",
+  "enableNotifications": false,
+  "startUrl": "/m",
+  "iconUrl": "https://visits.example.ps/icon-512.png",
+  "maskableIconUrl": "https://visits.example.ps/icon-maskable-512.png",
+  "webManifestUrl": "https://visits.example.ps/manifest.webmanifest",
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "signingKey": { "path": "./ambassadors.keystore", "alias": "ambassadors" },
+  "fallbackType": "customtabs",
+  "features": { "locationDelegation": { "enabled": true } },
+  "minSdkVersion": 21
+}

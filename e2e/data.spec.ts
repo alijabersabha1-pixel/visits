@@ -66,11 +66,12 @@ test("المسؤول بيشوف الخطوط والقوائم وملف الشه�
   await expect(page.getByRole("button", { name: "إيقاف" })).toHaveCount(0);
 
   const o = { Origin: baseURL! };
-  const res = await Promise.all([
-    page.request.post("/api/lines", { headers: o, data: { code: "G-1-001", accountName: "تسلل" } }),
-    page.request.post("/api/lists", { headers: o, data: { kind: "ACTION", label: "تسلل" } }),
-    page.request.post("/api/import/preview", { headers: o, multipart: { month: "2026-11" } }),
-    page.request.post("/api/import", { headers: o, multipart: { month: "2026-11" } }),
-  ]);
-  for (const r of res) expect(r.status()).toBe(403);
+  // واحد ورا التاني: الرفض بيصير قبل قراءة الملف المرفوع، فالطلبات المتوازية ممكن تقطع اتصال بعض
+  const calls = [
+    () => page.request.post("/api/lines", { headers: o, data: { code: "G-1-001", accountName: "تسلل" } }),
+    () => page.request.post("/api/lists", { headers: o, data: { kind: "ACTION", label: "تسلل" } }),
+    () => page.request.post("/api/import/preview", { headers: o, multipart: { month: "2026-11" } }),
+    () => page.request.post("/api/import", { headers: o, multipart: { month: "2026-11" } }),
+  ];
+  for (const call of calls) expect((await call()).status()).toBe(403);
 });
