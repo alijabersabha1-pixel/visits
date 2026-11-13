@@ -1067,3 +1067,73 @@ a.card.stat:hover {
   gap: 4px;
   font-size: 14px;
 }
+
+/* ===== الخريطة (المهمة 23) ===== */
+.map-wrap {
+  display: grid;
+  gap: 10px;
+}
+.map-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  color: var(--ink-2);
+}
+.map-body {
+  position: relative;
+}
+.map {
+  height: min(70vh, 640px);
+  min-height: 380px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  z-index: 0;
+}
+.map-panel {
+  position: absolute;
+  top: 10px;
+  inset-inline-start: 10px;
+  width: min(340px, calc(100% - 20px));
+  max-height: calc(100% - 20px);
+  overflow-y: auto;
+  z-index: 500;
+}
+.pin span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 2px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.leaflet-container {
+  font-family: var(--font);
+}
+/* التجمعات بلون محايد، عشان ما تنخلط بلون «فحص شبكة» */
+.marker-cluster div {
+  background: #3d4752;
+  color: #fff;
+  font-family: var(--font);
+  font-weight: 700;
+  width: 32px;
+  height: 32px;
+  margin: 4px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+.marker-cluster {
+  background: rgba(61, 71, 82, 0.22);
+  border-radius: 50%;
+}
+@media (max-width: 700px) {
+  .map-panel {
+    position: static;
+    width: auto;
+    max-height: none;
+    margin-top: 10px;
+  }
+}

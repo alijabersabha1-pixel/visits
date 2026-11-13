@@ -12,7 +12,7 @@ const MAIN: Item[] = [
   { href: "/visits", label: "الزيارات", exact: true },
   { href: "/visits/mine", label: "زياراتي" },
   { href: "/revisits", label: "إعادة الزيارة" },
-  { href: "/map", label: "الخريطة", soon: true },
+  { href: "/map", label: "الخريطة" },
   { href: "/vpn", label: "حالات VPN" },
   { href: "/cards", label: "البطاقات" },
   { href: "/mikrotik/access", label: "بحاجة access" },
