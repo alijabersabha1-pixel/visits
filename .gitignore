@@ -12,3 +12,4 @@ lib/generated/
 next-env.d.ts
 legacy-review/
 data/
+.tmp/
