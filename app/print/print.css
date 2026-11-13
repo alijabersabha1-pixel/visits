@@ -1,0 +1,126 @@
+@page {
+  size: A4;
+  margin: 14mm 12mm 16mm;
+}
+body {
+  background: #fff;
+}
+.print-root {
+  max-width: 190mm;
+  margin: 0 auto;
+  padding: 16px;
+  font-size: 11.5px;
+  color: #17212b;
+}
+.print-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 3px solid var(--green);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+.print-head h1 {
+  font-size: 18px;
+  color: var(--blue);
+}
+.print-head .meta {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.print-head img {
+  height: 46px;
+  width: auto;
+}
+.print-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+table.ptable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+}
+.ptable th {
+  background: var(--blue);
+  color: #fff;
+  font-weight: 600;
+  padding: 5px 6px;
+  text-align: start;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.ptable td {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.ptable tr {
+  break-inside: avoid;
+}
+.ptable tfoot td {
+  font-weight: 700;
+  border-top: 2px solid var(--ink);
+}
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-inline-end: 4px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.visit-block {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  break-inside: avoid;
+}
+.visit-block h2 {
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.vb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px 12px;
+  margin-bottom: 6px;
+}
+.vb-grid dt {
+  color: var(--ink-3);
+  font-size: 10px;
+}
+.vb-grid dd {
+  margin: 0;
+}
+.vb-text {
+  white-space: pre-wrap;
+  margin: 4px 0 0;
+}
+.vb-label {
+  color: var(--ink-3);
+  font-size: 10px;
+  margin-top: 6px;
+}
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin-bottom: 12px;
+}
+@media print {
+  .print-toolbar {
+    display: none;
+  }
+  .print-root {
+    padding: 0;
+    max-width: none;
+  }
+}

@@ -183,6 +183,16 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           <section className="card" aria-label="الزيارات">
             <div className="card-head">
               <h2>الزيارات ({r.visits.length})</h2>
+              {can(me, "export") && r.visits.length > 0 && (
+                <span className="actions">
+                  <a className="btn btn-ghost btn-sm" href={`/api/export/line?code=${encodeURIComponent(code)}&format=pdf`}>
+                    تقرير الخط PDF
+                  </a>
+                  <a className="btn btn-ghost btn-sm" href={`/api/export/line?code=${encodeURIComponent(code)}`}>
+                    Excel
+                  </a>
+                </span>
+              )}
             </div>
             <VisitTable rows={r.visits} showRegion={false} empty="ما في زيارات لهالخط." />
           </section>

@@ -41,10 +41,13 @@ export function VisitTable({
   rows,
   empty = "ما في زيارات بهالفلتر.",
   showRegion = true,
+  selectForm,
 }: {
   rows: VisitRow[];
   empty?: string;
   showRegion?: boolean;
+  /** لو موجود: مربع اختيار لكل زيارة تابع لنموذج التصدير بهالاسم */
+  selectForm?: string;
 }) {
   if (!rows.length) return <div className="empty">{empty}</div>;
   return (
@@ -52,6 +55,11 @@ export function VisitTable({
       <table className="table stack">
         <thead>
           <tr>
+            {selectForm && (
+              <th style={{ width: 36 }}>
+                <span className="sr-only">اختيار</span>
+              </th>
+            )}
             <th>رقم</th>
             <th>التاريخ</th>
             <th>الخط</th>
@@ -64,6 +72,17 @@ export function VisitTable({
         <tbody>
           {rows.map((v) => (
             <tr key={v.id} data-visit={v.number}>
+              {selectForm && (
+                <td className="cell-select">
+                  <input
+                    type="checkbox"
+                    name="ids"
+                    value={v.id}
+                    form={selectForm}
+                    aria-label={`اختيار الزيارة ${v.number}`}
+                  />
+                </td>
+              )}
               <td className="cell-main">
                 <Link href={`/visits/${v.id}`}>
                   <b className="ltr">#{v.number}</b>

@@ -5,6 +5,7 @@ import { can } from "@/lib/authz";
 import { listVisits } from "@/lib/visit-list";
 import { formOptions } from "@/lib/form-options";
 import { Pager, toFilters, VisitFiltersForm, VisitTable, type FilterValues } from "@/components/visit-ui";
+import { ExportBar, EXPORT_FORM } from "@/components/ExportBar";
 
 export const metadata: Metadata = { title: "الزيارات" };
 
@@ -39,7 +40,8 @@ export default async function VisitsPage({
       )}
       <div className="card">
         <VisitFiltersForm values={sp} options={options} />
-        <VisitTable rows={result.rows} />
+        {can(me, "export") && result.total > 0 && <ExportBar values={sp} total={result.total} />}
+        <VisitTable rows={result.rows} selectForm={can(me, "export") ? EXPORT_FORM : undefined} />
         <Pager page={result.page} pages={result.pages} total={result.total} values={sp} />
       </div>
     </>

@@ -1137,3 +1137,29 @@ a.card.stat:hover {
     margin-top: 10px;
   }
 }
+
+/* ===== التصدير (المهمة 25) ===== */
+.export-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--line);
+  background: #fafbfc;
+}
+.cell-select input {
+  width: 18px;
+  height: 18px;
+}
+@media (max-width: 700px) {
+  table.stack td.cell-select {
+    position: absolute;
+    inset-inline-end: 16px;
+    width: auto;
+  }
+  table.stack tr {
+    position: relative;
+  }
+}

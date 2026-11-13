@@ -21,11 +21,17 @@ FROM builder AS tools
 
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0 \
+    CHROME_PATH=/usr/bin/chromium
+# Chromium لتصدير الـ PDF (العربي بيطلع صح). الخط العربي نفسه من ملفات الموقع.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends chromium fonts-noto-core ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 RUN groupadd --system app && useradd --system --gid app app \
     && mkdir -p /data/uploads && chown app:app /data/uploads
 COPY --from=builder --chown=app:app /app/.next/standalone ./
 COPY --from=builder --chown=app:app /app/.next/static ./.next/static
+COPY --from=builder --chown=app:app /app/public ./public
 COPY --from=builder --chown=app:app /app/prisma/migrations ./prisma/migrations
 COPY --from=builder --chown=app:app /app/scripts/migrate.mjs ./scripts/migrate.mjs
 # مكتبة pg (للـ migrations) موجودة أصلاً بـ standalone لأن Prisma بيستعملها

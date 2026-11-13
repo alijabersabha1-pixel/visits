@@ -32,7 +32,15 @@ export default async function CardReport({
           </h1>
           <p className="muted">{owner ? `السفير: ${owner.displayName}` : "الفريق كله"}</p>
         </div>
-        <PrintButton />
+        <div className="actions">
+          <a className="btn btn-primary" href={`/api/export/cards?${new URLSearchParams({ month, ...(ownerId && { owner: ownerId }), format: "pdf" })}`}>
+            PDF
+          </a>
+          <a className="btn btn-ghost" href={`/api/export/cards?${new URLSearchParams({ month, ...(ownerId && { owner: ownerId }) })}`}>
+            Excel
+          </a>
+          <PrintButton />
+        </div>
       </div>
       <div className="card">
         <table className="table">

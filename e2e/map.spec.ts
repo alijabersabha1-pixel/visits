@@ -48,7 +48,9 @@ test("زيارة فيها موقع بتطلع دبوس على الخريطة، �
 
   // فلتر التوصية بيخفي الدبوس
   const fine = boot.recommendations.find((r: { label: string }) => r.label === "لا يوجد تجاوز").id;
-  await boss.goto(`/map?rec=${fine}`);
-  await expect(boss.getByTestId("pin-count")).toHaveText("0");
+  const filtered = await (await boss.request.get(`/api/map?rec=${fine}`)).json();
+  expect(filtered.pins.map((p: { code: string }) => p.code)).not.toContain("G-7777-001");
+  const all = await (await boss.request.get(`/api/map?rec=${violation}`)).json();
+  expect(all.pins.map((p: { code: string }) => p.code)).toContain("G-7777-001");
   await ctx.close();
 });

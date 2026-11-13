@@ -20,7 +20,7 @@ const csp = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
-  serverExternalPackages: ["@node-rs/argon2"],
+  serverExternalPackages: ["@node-rs/argon2", "playwright-core"],
   async headers() {
     return [
       // الـ Service Worker لازم يتحدّث دايماً، فما بينحفظ بالكاش
