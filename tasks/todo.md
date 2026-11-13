@@ -266,7 +266,7 @@
 - [x] تحديث الموقع يوصل للتطبيق بدون إعادة تثبيت
 **التحقق:** تثبيت فعلي على الجوالات.
 **يعتمد على:** 16
-**الملفات:** `twa-manifest.json`، `public/.well-known/assetlinks.json`، `docs/install-android.md`
+**الملفات:** `twa-manifest.json`، `app/.well-known/assetlinks.json/route.ts`، `docs/install-android.md`
 **الحجم:** S
 
 ### ✅ نقطة مراجعة 4
@@ -317,8 +317,8 @@
 ### المهمة 26: فحص الأمان
 **الوصف:** رؤوس الأمان (CSP وHSTS وغيرها)، وتحديد معدل الطلبات، ومراجعة OWASP Top 10، وفحص OWASP ZAP، و`npm audit`، ومعالجة كل نتيجة عالية أو متوسطة، ثم تقرير مكتوب.
 **معايير القبول:**
-- [ ] صفر نتائج عالية أو متوسطة مفتوحة
-- [ ] تقرير الفحص محفوظ بـ `docs/security-report.md`
+- [x] صفر نتائج عالية أو متوسطة مفتوحة
+- [x] تقرير الفحص محفوظ بـ `docs/security-report.md`
 **التحقق:** إعادة الفحص بعد الإصلاح.
 **يعتمد على:** 25
 **الملفات:** `next.config.ts`، `middleware.ts`، `docs/security-report.md`

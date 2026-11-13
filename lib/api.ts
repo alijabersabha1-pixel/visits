@@ -8,9 +8,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ZodError, type ZodType } from "zod";
 import { SESSION_COOKIE, userFromToken, type SessionUser } from "./auth";
 import { can, type Permission } from "./authz";
-import { ApiError, unauthorized, forbidden, notFound } from "./errors";
+import { ApiError, RateLimitError, unauthorized, forbidden, notFound } from "./errors";
+import { apiLimiter, clientKey } from "./rate-limit";
+import { createHash } from "node:crypto";
 
-export { ApiError, unauthorized, forbidden, notFound };
+export { ApiError, RateLimitError, unauthorized, forbidden, notFound };
 
 const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -51,8 +53,19 @@ export function handler<C = unknown>(fn: Handler<C>): Handler<C> {
   return async (req, ctx) => {
     try {
       checkOrigin(req);
+      // لكل جلسة إذا موجودة، وإلا لكل عنوان
+      const token = req.cookies.get(SESSION_COOKIE)?.value;
+      const key = token ? `s:${createHash("sha256").update(token).digest("hex").slice(0, 32)}` : `ip:${clientKey(req.headers)}`;
+      const rl = apiLimiter.hit(key);
+      if (!rl.ok) throw new RateLimitError(rl.retryAfterSec);
       return await fn(req, ctx);
     } catch (err) {
+      if (err instanceof RateLimitError) {
+        return NextResponse.json(
+          { error: err.message },
+          { status: 429, headers: { "Retry-After": String(err.retryAfterSec) } },
+        );
+      }
       if (err instanceof ApiError) {
         return NextResponse.json({ error: err.message, details: err.details }, { status: err.status });
       }

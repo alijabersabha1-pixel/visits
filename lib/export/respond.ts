@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE } from "../auth";
-import { ApiError } from "../errors";
+import { ApiError, RateLimitError } from "../errors";
+import { pdfLimiter } from "../rate-limit";
 import { renderPdf } from "./pdf";
 
 const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -24,6 +25,8 @@ export function fileResponse(body: Buffer, name: string, type: "xlsx" | "pdf") {
 export async function pdfResponse(req: NextRequest, printPath: string, name: string) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   if (!token) throw new ApiError(401, "لازم تسجّل دخول");
+  const rl = pdfLimiter.hit(token);
+  if (!rl.ok) throw new RateLimitError(rl.retryAfterSec, "طلبت PDF كتير ورا بعض. استنى دقيقة.");
   try {
     return fileResponse(await renderPdf(printPath, token), name, "pdf");
   } catch (err) {
