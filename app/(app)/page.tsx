@@ -13,7 +13,6 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const user = await requireUser();
   const { denied } = await searchParams;
   const showStats = can(user, "stats:view");
-  const canManage = can(user, "users:manage");
 
   const [ambassadors, managers, changesToday] = showStats
     ? await Promise.all([
@@ -61,13 +60,17 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <div className="card card-pad">
         <h2>شو الجاهز هلأ</h2>
         <ul className="muted" style={{ margin: "10px 0 0", paddingInlineStart: 20 }}>
-          <li>الدخول بالحساب الشخصي، والخروج، وتغيير كلمة السر</li>
-          {canManage ? (
-            <li>إدارة المستخدمين: إضافة، تغيير الدور، إيقاف، كلمة سر مؤقتة، طرد من كل الأجهزة</li>
-          ) : (
-            <li>قائمة المستخدمين للاطلاع</li>
-          )}
-          <li>سجل التعديلات بفلتر حسب الشخص والتاريخ</li>
+          <li>
+            <Link href="/search">البحث بالـ Line Code</Link>: بطاقة الخط وكل زياراته، و
+            <Link href="/search/bulk">البحث الجماعي</Link>
+          </li>
+          <li>
+            <Link href="/visits">الزيارات</Link> بفلاتر، وتسجيل زيارة جديدة وتعديلها وطلبات التعديل
+          </li>
+          <li>
+            <Link href="/revisits">بانتظار إعادة زيارة</Link> حسب المنطقة، مع التأجيل
+          </li>
+          <li>ملف الشهر، خطوط المشتركين، القوائم، المستخدمون، وسجل التعديلات</li>
         </ul>
       </div>
     </>

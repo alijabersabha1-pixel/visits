@@ -6,8 +6,9 @@ export async function resetDb() {
   await prisma.$transaction([
     prisma.$executeRawUnsafe(`ALTER TABLE "audit_log" DISABLE TRIGGER USER`),
     prisma.$executeRawUnsafe(
-      `TRUNCATE "audit_log", "sessions", "users", "visits", "manager_log", "month_targets", "lines", "imports", "settings", "list_items" RESTART IDENTITY CASCADE`,
+      `TRUNCATE "audit_log", "sessions", "edit_requests", "revisit_postponements", "users", "visits", "manager_log", "month_targets", "lines", "imports", "settings", "list_items" RESTART IDENTITY CASCADE`,
     ),
+    prisma.$executeRawUnsafe(`ALTER SEQUENCE "visit_number_seq" RESTART WITH 1`),
     prisma.$executeRawUnsafe(`INSERT INTO "list_items" SELECT * FROM "_seed_list_items"`),
     prisma.$executeRawUnsafe(`ALTER TABLE "audit_log" ENABLE TRIGGER USER`),
   ]);
@@ -23,3 +24,12 @@ export async function makeUser(
 }
 
 export { prisma };
+
+export async function sessionActor(username: string, role: "MANAGER" | "AMBASSADOR" = "AMBASSADOR") {
+  const u = await makeUser(username, role);
+  return { id: u.id, role: u.role, active: u.active, displayName: u.displayName };
+}
+
+export async function listId(kind: "RECOMMENDATION" | "ACTION", label: string) {
+  return (await prisma.listItem.findFirstOrThrow({ where: { kind, label } })).id;
+}

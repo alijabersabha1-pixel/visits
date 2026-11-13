@@ -4,12 +4,17 @@ import { Brand, BrandMark } from "@/components/Brand";
 import { Nav } from "@/components/Nav";
 import { LogoutButton } from "@/components/LogoutButton";
 import { ROLE_LABEL } from "@/lib/roles";
+import { prisma } from "@/lib/db";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // كل صفحة بتفحص الدخول والصلاحية بنفسها كمان (requireUser / requirePermission)
   const user = await requireUser({ passwordPage: true });
 
   const showAdmin = can(user, "users:view") || can(user, "audit:view");
+  const isAmbassador = can(user, "visits:mine");
+  const inbox = isAmbassador
+    ? await prisma.editRequest.count({ where: { status: "PENDING", visit: { ownerId: user.id, deletedAt: null } } })
+    : 0;
   const foot = (
     <div className="sidebar-foot">
       <span className="avatar" aria-hidden="true">
@@ -29,7 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="sidebar-head">
           <Brand />
         </div>
-        <Nav showAdmin={showAdmin} />
+        <Nav showAdmin={showAdmin} isAmbassador={isAmbassador} inbox={inbox} />
         {foot}
       </aside>
 
@@ -47,7 +52,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </svg>
           </span>
         </summary>
-        <Nav showAdmin={showAdmin} />
+        <Nav showAdmin={showAdmin} isAmbassador={isAmbassador} inbox={inbox} />
         {foot}
       </details>
 

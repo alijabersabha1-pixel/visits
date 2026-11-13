@@ -31,6 +31,11 @@ model User {
   sessions  Session[]
   auditLogs AuditLog[]
 
+  visits          Visit[]               @relation("owner")
+  postponements   RevisitPostponement[]
+  editRequests    EditRequest[]         @relation("requester")
+  decidedRequests EditRequest[]         @relation("decider")
+
   @@map("users")
 }
 
@@ -194,6 +199,9 @@ model Visit {
   accountName      String?
   specialCase      Boolean     @default(false) // زيارة بدون Line Code
   ownerId          String?     @db.Uuid // null = قديمة بدون صاحب
+  owner            User?       @relation("owner", fields: [ownerId], references: [id], onDelete: Restrict)
+  companionIds     String[]    @default([]) @db.Uuid // المرافقين
+  place            String? // مكان الحالة الخاصة
   tests            String? // الفحوصات اللي تمت
   result           String? // نتيجة الفحوصات
   recommendationId String?     @db.Uuid
@@ -201,12 +209,21 @@ model Visit {
   actionId         String?     @db.Uuid
   action           ListItem?   @relation("action", fields: [actionId], references: [id])
   revisitNote      String? // خانة «إعادة الزيارة» بالإكسل
+  revisitDue       DateTime?   @db.Date // موعد مقترح لإعادة الزيارة (اختياري)
+  revisitOfId      String?     @db.Uuid // الزيارة الأصلية اللي هاي إعادة إلها
+  revisitOf        Visit?      @relation("revisit", fields: [revisitOfId], references: [id], onDelete: SetNull)
+  revisits         Visit[]     @relation("revisit")
+  postponements    RevisitPostponement[]
+  editRequests     EditRequest[]
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
   deletedAt        DateTime?
 
   @@index([lineCodeKey])
   @@index([visitedOn])
+  @@index([ownerId])
+  @@index([recommendationId])
+  @@index([number])
   @@map("visits")
 }
 
@@ -217,4 +234,44 @@ model Setting {
   updatedAt DateTime @updatedAt
 
   @@map("settings")
+}
+
+/// تأجيل إعادة زيارة، مع السبب
+model RevisitPostponement {
+  id        String   @id @default(uuid()) @db.Uuid
+  visitId   String   @db.Uuid
+  visit     Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  reason    String
+  byId      String   @db.Uuid
+  by        User     @relation(fields: [byId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+
+  @@index([visitId])
+  @@map("revisit_postponements")
+}
+
+enum EditRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// طلب تعديل تقرير زيارة سفير تاني. صاحب الزيارة بيوافق أو بيرفض
+model EditRequest {
+  id          String            @id @default(uuid()) @db.Uuid
+  visitId     String            @db.Uuid
+  visit       Visit             @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  requesterId String            @db.Uuid
+  requester   User              @relation("requester", fields: [requesterId], references: [id], onDelete: Restrict)
+  changes     Json // { field: { from, to } }
+  reason      String
+  status      EditRequestStatus @default(PENDING)
+  decidedById String?           @db.Uuid
+  decidedBy   User?             @relation("decider", fields: [decidedById], references: [id], onDelete: Restrict)
+  decidedAt   DateTime?
+  createdAt   DateTime          @default(now())
+
+  @@index([visitId])
+  @@index([status])
+  @@map("edit_requests")
 }

@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type Item = { href: string; label: string; soon?: boolean };
+type Item = { href: string; label: string; soon?: boolean; count?: number; exact?: boolean };
 
 // الصفحات اللي جاية بالمراحل الجاية بتظهر «قريباً» عشان الشكل العام يبيّن من هلأ
 const MAIN: Item[] = [
   { href: "/", label: "الرئيسية" },
-  { href: "/search", label: "البحث بالـ Line Code", soon: true },
-  { href: "/visits", label: "الزيارات", soon: true },
-  { href: "/visits/mine", label: "زياراتي", soon: true },
-  { href: "/revisits", label: "إعادة الزيارة", soon: true },
+  { href: "/search", label: "البحث بالـ Line Code" },
+  { href: "/visits", label: "الزيارات", exact: true },
+  { href: "/visits/mine", label: "زياراتي" },
+  { href: "/revisits", label: "إعادة الزيارة" },
   { href: "/map", label: "الخريطة", soon: true },
   { href: "/vpn", label: "حالات VPN", soon: true },
   { href: "/cards", label: "البطاقات", soon: true },
@@ -22,6 +22,7 @@ const MANAGE: Item[] = [
   { href: "/admin/import", label: "ملف الشهر" },
   { href: "/admin/lists", label: "القوائم" },
   { href: "/admin/users", label: "المستخدمون" },
+  { href: "/admin/trash", label: "سلة المحذوفات" },
   { href: "/admin/audit", label: "سجل التعديلات" },
 ];
 
@@ -36,19 +37,32 @@ function NavItem({ item, path }: { item: Item; path: string }) {
       </span>
     );
   }
-  const active = item.href === "/" ? path === "/" : path.startsWith(item.href);
+  const active =
+    item.href === "/"
+      ? path === "/"
+      : item.exact
+        ? path === item.href || (path.startsWith(`${item.href}/`) && !path.startsWith(`${item.href}/mine`))
+        : path.startsWith(item.href);
   return (
     <Link href={item.href} aria-current={active ? "page" : undefined}>
       {item.label}
+      {!!item.count && (
+        <span className="badge badge-red" aria-label={`${item.count} بانتظارك`}>
+          {item.count}
+        </span>
+      )}
     </Link>
   );
 }
 
-export function Nav({ showAdmin }: { showAdmin: boolean }) {
+export function Nav({ showAdmin, isAmbassador, inbox }: { showAdmin: boolean; isAmbassador: boolean; inbox: number }) {
   const path = usePathname();
+  // زياراتي وطلبات التعديل للسفير بس
+  const main = MAIN.filter((i) => isAmbassador || i.href !== "/visits/mine");
+  const account = isAmbassador ? [{ href: "/inbox", label: "طلبات التعديل", count: inbox }, ...ACCOUNT] : ACCOUNT;
   return (
     <nav className="nav">
-      {MAIN.map((i) => (
+      {main.map((i) => (
         <NavItem key={i.href} item={i} path={path} />
       ))}
       {showAdmin && (
@@ -60,7 +74,7 @@ export function Nav({ showAdmin }: { showAdmin: boolean }) {
         </>
       )}
       <div className="nav-group">حسابي</div>
-      {ACCOUNT.map((i) => (
+      {account.map((i) => (
         <NavItem key={i.href} item={i} path={path} />
       ))}
     </nav>

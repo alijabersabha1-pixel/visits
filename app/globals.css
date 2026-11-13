@@ -716,3 +716,65 @@ dialog.modal::backdrop {
 .list-row .actions {
   flex-wrap: nowrap;
 }
+
+/* نموذج الزيارة */
+textarea.input {
+  min-height: auto;
+  resize: vertical;
+  line-height: 1.6;
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+}
+.check.chip {
+  border: 1px solid var(--line-strong);
+  border-radius: 99px;
+  padding: 6px 12px;
+}
+.warn-text {
+  color: var(--warn);
+}
+.kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 20px;
+  margin: 0;
+}
+.kv dt {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.kv dd {
+  margin: 2px 0 0;
+  font-weight: 500;
+  white-space: pre-wrap;
+}
+.prose-box {
+  white-space: pre-wrap;
+  margin: 4px 0 0;
+}
+.side-by-side {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 700px) {
+  .side-by-side {
+    grid-template-columns: 1fr;
+  }
+}
+.side-by-side > div {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  white-space: pre-wrap;
+}
