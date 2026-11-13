@@ -675,3 +675,44 @@ dialog.modal::backdrop {
   text-align: center;
   color: var(--ink-2);
 }
+
+/* القوائم */
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.list-row:last-child {
+  border-bottom: 0;
+}
+.list-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+.list-add {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+}
+.list-inactive {
+  border-top: 1px solid var(--line);
+  padding: 10px 0 4px;
+}
+.list-inactive summary {
+  padding: 0 20px 6px;
+  cursor: pointer;
+}
+.list-row .actions {
+  flex-wrap: nowrap;
+}

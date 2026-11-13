@@ -19,7 +19,8 @@
     "test:coverage": "vitest run --coverage",
     "create-user": "tsx scripts/create-user.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "import:legacy": "tsx scripts/import-legacy.ts"
   },
   "engines": {
     "node": ">=22"
@@ -29,6 +30,8 @@
     "@node-rs/argon2": "^2.2.2",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
+    "exceljs": "^4.4.0",
+    "jszip": "^3.10.2",
     "next": "^16.4.6",
     "pg": "^8.23.1",
     "react": "^19.3.1",
@@ -52,5 +55,8 @@
     "typescript": "^6.0.3",
     "vitest": "^5.1.0"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
 }

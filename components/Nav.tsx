@@ -18,6 +18,9 @@ const MAIN: Item[] = [
 ];
 
 const MANAGE: Item[] = [
+  { href: "/admin/lines", label: "خطوط المشتركين" },
+  { href: "/admin/import", label: "ملف الشهر" },
+  { href: "/admin/lists", label: "القوائم" },
   { href: "/admin/users", label: "المستخدمون" },
   { href: "/admin/audit", label: "سجل التعديلات" },
 ];

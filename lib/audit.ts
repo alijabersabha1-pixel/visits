@@ -15,7 +15,8 @@ export type AuditAction =
   | "LOCKED"
   | "PASSWORD_RESET"
   | "PASSWORD_CHANGE"
-  | "SESSIONS_REVOKED";
+  | "SESSIONS_REVOKED"
+  | "IMPORT";
 
 export interface AuditEntry {
   action: AuditAction;
@@ -115,6 +116,7 @@ export async function withAudit<T>(
   actorId: string | null,
   fn: (tx: Tx, audit: AuditRecorder) => Promise<T>,
   db: Db = defaultPrisma,
+  txOptions: { timeout?: number } = {},
 ): Promise<T> {
   return db.$transaction(async (tx) => {
     const audit = new AuditRecorder();
@@ -134,7 +136,7 @@ export async function withAudit<T>(
       });
     }
     return result;
-  });
+  }, txOptions);
 }
 
 /** حدث بدون تعديل بيانات (دخول، قفل...) */

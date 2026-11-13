@@ -5,7 +5,10 @@ import { createUser } from "@/lib/users";
 export async function resetDb() {
   await prisma.$transaction([
     prisma.$executeRawUnsafe(`ALTER TABLE "audit_log" DISABLE TRIGGER USER`),
-    prisma.$executeRawUnsafe(`TRUNCATE "audit_log", "sessions", "users" RESTART IDENTITY CASCADE`),
+    prisma.$executeRawUnsafe(
+      `TRUNCATE "audit_log", "sessions", "users", "visits", "manager_log", "month_targets", "lines", "imports", "settings", "list_items" RESTART IDENTITY CASCADE`,
+    ),
+    prisma.$executeRawUnsafe(`INSERT INTO "list_items" SELECT * FROM "_seed_list_items"`),
     prisma.$executeRawUnsafe(`ALTER TABLE "audit_log" ENABLE TRIGGER USER`),
   ]);
 }

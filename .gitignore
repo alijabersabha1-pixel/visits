@@ -10,3 +10,4 @@ lib/generated/
 !.env.example
 *.tsbuildinfo
 next-env.d.ts
+legacy-review/

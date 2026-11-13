@@ -19,15 +19,30 @@ const ACTION_LABEL: Record<string, { text: string; tone: string }> = {
   PASSWORD_RESET: { text: "كلمة سر مؤقتة", tone: "badge-warn" },
   PASSWORD_CHANGE: { text: "تغيير كلمة السر", tone: "badge-gray" },
   SESSIONS_REVOKED: { text: "طرد من الأجهزة", tone: "badge-warn" },
+  IMPORT: { text: "استيراد", tone: "badge-blue" },
 };
 
-const ENTITY_LABEL: Record<string, string> = { User: "مستخدم" };
+const ENTITY_LABEL: Record<string, string> = {
+  User: "مستخدم",
+  Line: "خط",
+  ListItem: "قائمة",
+  Import: "ملف شهر",
+  Visit: "زيارة",
+};
 
 const FIELD_LABEL: Record<string, string> = {
   username: "اسم الدخول",
   displayName: "الاسم",
   role: "الدور",
   active: "فعّال",
+  code: "Line Code",
+  accountName: "الحساب",
+  speed: "السرعة",
+  locality: "المكان",
+  manual: "مضاف يدوياً",
+  kind: "القائمة",
+  label: "القيمة",
+  color: "اللون",
 };
 
 const VALUE_LABEL: Record<string, string> = {

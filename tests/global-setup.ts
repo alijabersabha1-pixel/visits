@@ -18,4 +18,9 @@ export default async function setup() {
   await client.query(`CREATE DATABASE "${dbName}"`);
   await client.end();
   await migrate(TEST_DATABASE_URL, () => {});
+  // نسخة من القوائم الابتدائية (من الـ migration) عشان كل اختبار يرجع لها
+  const db = new Client({ connectionString: TEST_DATABASE_URL });
+  await db.connect();
+  await db.query(`CREATE TABLE "_seed_list_items" AS SELECT * FROM "list_items"`);
+  await db.end();
 }

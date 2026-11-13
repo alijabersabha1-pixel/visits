@@ -68,3 +68,153 @@ model AuditLog {
   @@index([entity, entityId])
   @@map("audit_log")
 }
+
+// ───────────── المرحلة 2: البيانات ─────────────
+
+/// خط مشترك. المفتاح هو الكود بعد التنظيف (lib/line-code.ts)
+model Line {
+  id             String   @id @default(uuid()) @db.Uuid
+  codeKey        String   @unique // G7872002
+  code           String // G-7872-002 متل ما إجا بالملف
+  accountKey     String // G7872: لخطوط نفس الحساب
+  accountName    String?
+  speed          String?
+  locality       String?
+  region         String? // غزة | الوسطى | الجنوب | null = مش معروفة
+  accountManager String? // من ملف المسؤول، للقراءة
+  fixedIp        String?
+  addrLocality   String?
+  addrQuarter    String?
+  manual         Boolean  @default(false) // انضاف يدوياً (حساب طارئ)
+  inLatestFile   Boolean  @default(true) // false = مش موجود بآخر ملف شهر
+  lastImportId   String?  @db.Uuid
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  targets    MonthTarget[]
+  managerLog ManagerLogEntry[]
+  visits     Visit[]
+
+  @@index([accountKey])
+  @@map("lines")
+}
+
+enum ListKind {
+  RECOMMENDATION // التوصية
+  ACTION // الإجراء المطبق
+}
+
+/// قوائم بيعدّلها السفراء. القيمة بتوقف وما بتنمسح، عشان الزيارات القديمة تضل سليمة
+model ListItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  kind      ListKind
+  label     String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  color     String? // لون الدبوس على الخريطة (للتوصيات)
+  createdAt DateTime @default(now())
+
+  recommendationVisits Visit[] @relation("recommendation")
+  actionVisits         Visit[] @relation("action")
+
+  @@unique([kind, label])
+  @@map("list_items")
+}
+
+/// كل رفعة لملف الشهر
+model Import {
+  id           String   @id @default(uuid()) @db.Uuid
+  month        String // 2026-11
+  fileName     String
+  fileSha256   String
+  importedById String   @db.Uuid
+  stats        Json
+  createdAt    DateTime @default(now())
+
+  @@index([month])
+  @@map("imports")
+}
+
+/// «زيارات الشهر» من ملف المسؤول: الخطوط المطلوب زيارتها هالشهر
+model MonthTarget {
+  id        String   @id @default(uuid()) @db.Uuid
+  month     String
+  lineId    String   @db.Uuid
+  line      Line     @relation(fields: [lineId], references: [id], onDelete: Cascade)
+  sheet     String // اسم الورقة بالملف
+  region    String?
+  teamNote  String? // «ملاحظات الفريق» متل ما إجت
+  excluded  Boolean  @default(false) // من ورقة «استثناء من الزيارات»
+  metrics   Json? // Data Speed, Utilization Avg, Total Out...
+  importId  String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  @@unique([month, lineId])
+  @@index([month, region])
+  @@map("month_targets")
+}
+
+/// سجل الإدارة من ورقة «الزيارات الإجماليه»: توصية السفراء والإجراء النهائي لمدير المنطقة. للقراءة بس
+model ManagerLogEntry {
+  id             String    @id @default(uuid()) @db.Uuid
+  rowKey         String    @unique // الكود + التاريخ + الترتيب: الملف تراكمي، فبنحدّث ما بنكرر
+  lineId         String    @db.Uuid
+  line           Line      @relation(fields: [lineId], references: [id], onDelete: Cascade)
+  visitDate      DateTime? @db.Date
+  teamNote       String?
+  recommendation String?
+  finalAction    String?
+  accountManager String?
+  lastImportId   String    @db.Uuid
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([lineId])
+  @@map("manager_log")
+}
+
+enum VisitSource {
+  LEGACY // منقولة من الإكسل
+  APP // انسجلت بالنظام
+}
+
+/// زيارة ميدانية. بالمرحلة 2 بس الزيارات القديمة المنقولة، والتسجيل من النظام بالمرحلة 3
+model Visit {
+  id               String      @id @default(uuid()) @db.Uuid
+  number           Int // رقم الزيارة. القديمة بأرقام الإكسل (فيها تكرار)، والجديدة بتكمل بعدها
+  source           VisitSource
+  legacyKey        String?     @unique // مفتاح عدم التكرار للنقل
+  visitedOn        DateTime?   @db.Date
+  dateText         String? // التاريخ متل ما كان بالإكسل
+  dateDoubtful     Boolean     @default(false)
+  lineId           String?     @db.Uuid
+  line             Line?       @relation(fields: [lineId], references: [id])
+  lineCode         String? // الكود متل ما انكتب
+  lineCodeKey      String? // للبحث حتى لو الخط مش بملف المشتركين
+  accountName      String?
+  specialCase      Boolean     @default(false) // زيارة بدون Line Code
+  ownerId          String?     @db.Uuid // null = قديمة بدون صاحب
+  tests            String? // الفحوصات اللي تمت
+  result           String? // نتيجة الفحوصات
+  recommendationId String?     @db.Uuid
+  recommendation   ListItem?   @relation("recommendation", fields: [recommendationId], references: [id])
+  actionId         String?     @db.Uuid
+  action           ListItem?   @relation("action", fields: [actionId], references: [id])
+  revisitNote      String? // خانة «إعادة الزيارة» بالإكسل
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  deletedAt        DateTime?
+
+  @@index([lineCodeKey])
+  @@index([visitedOn])
+  @@map("visits")
+}
+
+/// إعدادات بسيطة (مثلاً خريطة أعمدة ملف الشهر المحفوظة)
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
