@@ -22,6 +22,14 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@node-rs/argon2"],
   async headers() {
     return [
+      // الـ Service Worker لازم يتحدّث دايماً، فما بينحفظ بالكاش
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
       {
         source: "/:path*",
         headers: [

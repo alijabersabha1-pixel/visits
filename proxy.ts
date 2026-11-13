@@ -16,5 +16,5 @@ export function proxy(req: NextRequest) {
 
 export const config = {
   // كل الصفحات ما عدا الدخول والـ API والملفات الثابتة
-  matcher: ["/((?!login|api|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|brand/).*)"],
+  matcher: ["/((?!login|api|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|icon-|brand/|sw.js|manifest.webmanifest|\\.well-known).*)"],
 };

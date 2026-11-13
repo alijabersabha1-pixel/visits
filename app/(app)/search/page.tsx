@@ -5,6 +5,10 @@ import { can } from "@/lib/authz";
 import { lookupLine } from "@/lib/search";
 import { isValidLineCode } from "@/lib/line-code";
 import { fmtDay, RecBadge, VisitTable } from "@/components/visit-ui";
+import { MikrotikAnswers } from "@/components/FieldExtras";
+import { CredentialBox } from "@/components/CredentialBox";
+import { lastMikrotikAnswers } from "@/lib/mikrotik";
+import { credentialFor } from "@/lib/mikrotik-credentials";
 
 export const metadata: Metadata = { title: "البحث بالـ Line Code" };
 
@@ -14,6 +18,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const r = code && isValidLineCode(code) ? await lookupLine(code) : null;
   const last = r?.visits[0];
   const metrics = (r?.target?.metrics ?? null) as Record<string, string | number> | null;
+  const hasLine = !!r && (!!r.line || r.visits.length > 0);
+  const [mikrotik, cred] = hasLine
+    ? await Promise.all([
+        lastMikrotikAnswers(r!.codeKey),
+        can(me, "mikrotik:reveal") ? credentialFor(r!.codeKey) : Promise.resolve(null),
+      ])
+    : [null, null];
 
   return (
     <>
@@ -144,6 +155,27 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                 {Object.entries(metrics)
                   .map(([k, v]) => `${k}: ${typeof v === "number" ? Math.round(v * 100) / 100 : v}`)
                   .join(" · ")}
+              </div>
+            )}
+            {(mikrotik || can(me, "mikrotik:reveal")) && (
+              <div className="grid" style={{ gap: 8 }}>
+                <h3 style={{ fontSize: 15, margin: 0 }}>المايكروتيك</h3>
+                {mikrotik ? (
+                  <>
+                    <div className="small muted">
+                      آخر إجابات · <Link href={`/visits/${mikrotik.visitId}`}>زيارة {fmtDay(mikrotik.visitedOn)}</Link>
+                    </div>
+                    <MikrotikAnswers answers={mikrotik.answers} />
+                  </>
+                ) : (
+                  <div className="small muted">ما في إجابات مايكروتيك لهالخط لسا.</div>
+                )}
+                {can(me, "mikrotik:reveal") && (
+                  <CredentialBox
+                    lineCode={r.line?.code ?? last?.lineCode ?? code}
+                    cred={cred ? { id: cred.id, username: cred.username } : null}
+                  />
+                )}
               </div>
             )}
           </section>

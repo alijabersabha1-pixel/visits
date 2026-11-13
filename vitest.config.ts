@@ -7,7 +7,12 @@ export default defineConfig({
   test: {
     include: ["tests/**/*.test.ts"],
     globalSetup: ["tests/global-setup.ts"],
-    env: { DATABASE_URL: TEST_DATABASE_URL },
+    env: {
+      DATABASE_URL: TEST_DATABASE_URL,
+      // مفتاح تجريبي للاختبارات بس (32 بايت)
+      MIKROTIK_KEY: "dGVzdC1rZXktdGVzdC1rZXktdGVzdC1rZXktMzJieXQ=",
+      UPLOAD_DIR: "/tmp/av-test-uploads",
+    },
     // اختبارات قاعدة البيانات بتشتغل على قاعدة منفصلة وبالترتيب
     fileParallelism: false,
     testTimeout: 20_000,

@@ -13,8 +13,15 @@ const MAIN: Item[] = [
   { href: "/visits/mine", label: "زياراتي" },
   { href: "/revisits", label: "إعادة الزيارة" },
   { href: "/map", label: "الخريطة", soon: true },
-  { href: "/vpn", label: "حالات VPN", soon: true },
-  { href: "/cards", label: "البطاقات", soon: true },
+  { href: "/vpn", label: "حالات VPN" },
+  { href: "/cards", label: "البطاقات" },
+  { href: "/mikrotik/access", label: "بحاجة access" },
+];
+
+// للسفراء بس
+const FIELD: Item[] = [
+  { href: "/m", label: "تطبيق الميدان" },
+  { href: "/mikrotik/reveals", label: "سجل عرض كلمات السر" },
 ];
 
 const MANAGE: Item[] = [
@@ -65,6 +72,14 @@ export function Nav({ showAdmin, isAmbassador, inbox }: { showAdmin: boolean; is
       {main.map((i) => (
         <NavItem key={i.href} item={i} path={path} />
       ))}
+      {isAmbassador && (
+        <>
+          <div className="nav-group">الميدان</div>
+          {FIELD.map((i) => (
+            <NavItem key={i.href} item={i} path={path} />
+          ))}
+        </>
+      )}
       {showAdmin && (
         <>
           <div className="nav-group">الإدارة</div>

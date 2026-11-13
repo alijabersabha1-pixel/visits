@@ -26,6 +26,12 @@ services:
       DATABASE_URL: postgresql://visits:${DB_PASSWORD:?DB_PASSWORD لازم ينضبط بملف .env}@db:5432/visits
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      MIKROTIK_KEY: ${MIKROTIK_KEY:?MIKROTIK_KEY لازم ينضبط بملف .env}
+      UPLOAD_DIR: /data/uploads
+      TWA_PACKAGE_NAME: ${TWA_PACKAGE_NAME:-}
+      TWA_SHA256_FINGERPRINTS: ${TWA_SHA256_FINGERPRINTS:-}
+    volumes:
+      - uploads:/data/uploads
     ports:
       - "${APP_PORT:-3000}:3000"
 
@@ -39,3 +45,4 @@ services:
 
 volumes:
   db-data:
+  uploads:

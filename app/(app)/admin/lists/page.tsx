@@ -3,6 +3,8 @@ import { requirePermission } from "@/lib/session";
 import { can } from "@/lib/authz";
 import { LIST_KINDS, LIST_LABEL, listItems } from "@/lib/lists";
 import { ListEditor } from "./ListEditor";
+import { QuestionsEditor } from "./QuestionsEditor";
+import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = { title: "القوائم" };
 
@@ -21,13 +23,17 @@ export default async function ListsPage() {
       })),
     })),
   );
+  const questions = await prisma.mikrotikQuestion.findMany({
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    select: { id: true, text: true, options: true, active: true, sortOrder: true, role: true },
+  });
   return (
     <>
       <div className="page-head">
         <div>
           <h1>القوائم</h1>
           <p className="muted">
-            خيارات التوصية والإجراء بنموذج الزيارة. القيمة الموقوفة بتختفي من الزيارات الجديدة، وبتضل ظاهرة بالزيارات
+            خيارات التوصية والإجراء وأسئلة المايكروتيك بنموذج الزيارة. القيمة الموقوفة بتختفي من الزيارات الجديدة، وبتضل ظاهرة بالزيارات
             القديمة.
           </p>
         </div>
@@ -40,6 +46,7 @@ export default async function ListsPage() {
         {lists.map((l) => (
           <ListEditor key={l.kind} kind={l.kind} title={l.title} items={l.items} canManage={canManage} />
         ))}
+        <QuestionsEditor questions={questions} canManage={canManage} />
       </div>
     </>
   );

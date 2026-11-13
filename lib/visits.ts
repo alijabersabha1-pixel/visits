@@ -11,6 +11,7 @@ import { displayLineCode, isValidLineCode, normalizeLineCode } from "./line-code
 import { formatDay, parseDay, todayLocal } from "./dates";
 import type { ListKind } from "./lists";
 import { openRevisitFor } from "./revisits";
+import { storeImages, type DecodedImage } from "./attachments";
 
 const text = (max: number) =>
   z
@@ -52,6 +53,15 @@ export const statusPatchSchema = z
   .refine((v) => Object.keys(v).length > 0, "ما في شي يتعدّل");
 
 type CreateInput = z.input<typeof createVisitSchema>;
+
+/** إضافات الزيارة من الجوال (lib/sync.ts) */
+export interface FieldExtras {
+  clientUuid?: string;
+  filledAt?: Date;
+  gps?: { lat: number; lng: number; accuracy: number } | null;
+  mikrotik?: Array<{ questionId: string; question: string; answer: string }> | null;
+  photos?: DecodedImage[];
+}
 
 function checkDate(s: string): Date {
   const d = parseDay(s)!;
@@ -126,47 +136,68 @@ export async function loadVisit(tx: Tx, id: string) {
   return v;
 }
 
-export async function createVisit(actor: Actor, raw: CreateInput, db: Db = defaultPrisma) {
+export async function createVisit(actor: Actor, raw: CreateInput, field: FieldExtras = {}, db: Db = defaultPrisma) {
   if (!can(actor, "visits:create")) throw forbidden();
   const input = createVisitSchema.parse(raw);
   const visitedOn = checkDate(input.visitedOn);
-  return withAudit(
-    actor.id,
-    async (tx, audit) => {
-      const line = await resolveLine(tx, input.lineCode, input.specialCase ?? false, input.accountName);
-      await listItemFor(tx, "RECOMMENDATION", input.recommendationId, null, "التوصية");
-      if (input.actionId) await listItemFor(tx, "ACTION", input.actionId, null, "الإجراء");
-      const companionIds = [...new Set(input.companionIds ?? [])];
-      await checkCompanions(tx, actor.id, companionIds);
-      const [{ n }] = await tx.$queryRaw<[{ n: bigint }]>`SELECT nextval('visit_number_seq') AS n`;
-      // زيارة جديدة لخط بانتظار إعادة زيارة: بتنربط بالأصلية وبتطلّعه من القائمة
-      const revisitOfId = input.revisitOfId ?? (await openRevisitFor(tx, line.lineCodeKey));
-      const visit = await tx.visit.create({
-        data: {
-          number: Number(n),
-          source: "APP",
-          ownerId: actor.id,
-          visitedOn,
-          specialCase: input.specialCase ?? false,
-          place: input.place,
-          companionIds,
-          tests: input.tests,
-          result: input.result,
-          recommendationId: input.recommendationId,
-          actionId: input.actionId ?? null,
-          revisitDue: input.revisitDue ? parseDay(input.revisitDue) : null,
-          revisitOfId,
-          lineCode: line.lineCode,
-          lineCodeKey: line.lineCodeKey,
-          lineId: line.lineId,
-          accountName: line.accountName,
-        },
-      });
-      audit.created("Visit", visit.id, { number: visit.number, ...(await auditView(tx, visit)) });
-      return { visit, warning: line.warning };
-    },
-    db,
-  );
+  let cleanup: (() => Promise<void>) | null = null;
+  try {
+    return await withAudit(
+      actor.id,
+      async (tx, audit) => {
+        const line = await resolveLine(tx, input.lineCode, input.specialCase ?? false, input.accountName);
+        await listItemFor(tx, "RECOMMENDATION", input.recommendationId, null, "التوصية");
+        if (input.actionId) await listItemFor(tx, "ACTION", input.actionId, null, "الإجراء");
+        const companionIds = [...new Set(input.companionIds ?? [])];
+        await checkCompanions(tx, actor.id, companionIds);
+        const [{ n }] = await tx.$queryRaw<[{ n: bigint }]>`SELECT nextval('visit_number_seq') AS n`;
+        // زيارة جديدة لخط بانتظار إعادة زيارة: بتنربط بالأصلية وبتطلّعه من القائمة
+        const revisitOfId = input.revisitOfId ?? (await openRevisitFor(tx, line.lineCodeKey));
+        const visit = await tx.visit.create({
+          data: {
+            number: Number(n),
+            source: "APP",
+            ownerId: actor.id,
+            visitedOn,
+            specialCase: input.specialCase ?? false,
+            place: input.place,
+            companionIds,
+            tests: input.tests,
+            result: input.result,
+            recommendationId: input.recommendationId,
+            actionId: input.actionId ?? null,
+            revisitDue: input.revisitDue ? parseDay(input.revisitDue) : null,
+            revisitOfId,
+            lineCode: line.lineCode,
+            lineCodeKey: line.lineCodeKey,
+            lineId: line.lineId,
+            accountName: line.accountName,
+            clientUuid: field.clientUuid,
+            filledAt: field.filledAt,
+            lat: field.gps?.lat,
+            lng: field.gps?.lng,
+            gpsAccuracy: field.gps?.accuracy,
+            mikrotik: field.mikrotik ?? undefined,
+          },
+        });
+        if (field.photos?.length) cleanup = await storeImages(tx, "Visit", visit.id, field.photos, actor.id);
+        audit.created("Visit", visit.id, {
+          number: visit.number,
+          ...(await auditView(tx, visit)),
+          ...(field.photos?.length ? { photos: field.photos.length } : {}),
+          ...(field.gps
+            ? { gps: `${field.gps.lat.toFixed(5)}, ${field.gps.lng.toFixed(5)} (±${Math.round(field.gps.accuracy)}م)` }
+            : {}),
+        });
+        return { visit, warning: line.warning };
+      },
+      db,
+    );
+  } catch (err) {
+    // الحفظ فشل بعد كتابة الصور: بنمسحها
+    if (cleanup) await (cleanup as () => Promise<void>)();
+    throw err;
+  }
 }
 
 /** تعديل التقرير: لصاحب الزيارة، أو لأي سفير إذا الزيارة قديمة بدون صاحب */

@@ -778,3 +778,140 @@ textarea.input {
   padding: 8px 12px;
   white-space: pre-wrap;
 }
+
+/* تطبيق الميدان (/m) */
+.m-shell {
+  min-height: 100vh;
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--bg);
+}
+.m-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.m-main {
+  padding: 14px 14px 80px;
+}
+.m-queue {
+  margin: 10px 14px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--blue-soft);
+  border: 1px solid color-mix(in srgb, var(--blue) 25%, transparent);
+}
+.m-queue-row,
+.m-failed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.m-failed {
+  border-top: 1px solid color-mix(in srgb, var(--blue) 15%, transparent);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+.m-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.m-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 14px;
+  min-height: 96px;
+  border-radius: var(--radius);
+  background: var(--blue);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.m-tile:hover {
+  text-decoration: none;
+}
+.m-tile b {
+  font-size: 16px;
+}
+.m-tile span {
+  font-size: 12.5px;
+  opacity: 0.85;
+}
+.m-tile-soft {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.seg button {
+  font: inherit;
+  font-size: 14px;
+  min-height: 40px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.seg button[aria-pressed="true"] {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.photos {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.photos img {
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+.m-sticky-save {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+@media print {
+  .sidebar,
+  .topbar,
+  .no-print {
+    display: none !important;
+  }
+  .shell {
+    display: block;
+  }
+  .main {
+    padding: 0;
+  }
+  .card {
+    box-shadow: none;
+  }
+  body {
+    background: #fff;
+  }
+}

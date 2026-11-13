@@ -33,6 +33,9 @@ model User {
 
   visits          Visit[]               @relation("owner")
   postponements   RevisitPostponement[]
+  vpnCases        VpnCase[]
+  cardPurchases   CardPurchase[]
+  mikrotikReveals MikrotikReveal[]
   editRequests    EditRequest[]         @relation("requester")
   decidedRequests EditRequest[]         @relation("decider")
 
@@ -210,6 +213,12 @@ model Visit {
   action           ListItem?   @relation("action", fields: [actionId], references: [id])
   revisitNote      String? // خانة «إعادة الزيارة» بالإكسل
   revisitDue       DateTime?   @db.Date // موعد مقترح لإعادة الزيارة (اختياري)
+  clientUuid       String?     @unique @db.Uuid // رقم فريد من الجوال (عدم التكرار)
+  filledAt         DateTime? // وقت التعبئة بالميدان (مش وقت الإرسال)
+  lat              Float?
+  lng              Float?
+  gpsAccuracy      Float? // بالمتر
+  mikrotik         Json? // [{ questionId, question, answer }]
   revisitOfId      String?     @db.Uuid // الزيارة الأصلية اللي هاي إعادة إلها
   revisitOf        Visit?      @relation("revisit", fields: [revisitOfId], references: [id], onDelete: SetNull)
   revisits         Visit[]     @relation("revisit")
@@ -274,4 +283,105 @@ model EditRequest {
   @@index([visitId])
   @@index([status])
   @@map("edit_requests")
+}
+
+/// صورة مرفقة (زيارة أو بطاقة). الملف برّا مجلد الموقع وبينخدم بعد فحص الدخول
+model Attachment {
+  id          String   @id @default(uuid()) @db.Uuid
+  entity      String // Visit | Card
+  entityId    String   @db.Uuid
+  mime        String
+  size        Int
+  path        String
+  createdById String   @db.Uuid
+  createdAt   DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@map("attachments")
+}
+
+model MikrotikQuestion {
+  id        String   @id @default(uuid()) @db.Uuid
+  text      String
+  options   String[]
+  role      String? // COUNT | ACCESS | USER_CREATED
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("mikrotik_questions")
+}
+
+/// بيانات دخول مايكروتيك خط. كلمة السر مشفّرة (lib/crypto.ts)
+model MikrotikCredential {
+  id             String   @id @default(uuid()) @db.Uuid
+  lineCodeKey    String   @unique
+  username       String
+  passwordCipher String
+  updatedById    String   @db.Uuid
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("mikrotik_credentials")
+}
+
+/// سجل عرض كلمات السر (للإلحاق فقط، للسفراء بس)
+model MikrotikReveal {
+  id           BigInt   @id @default(autoincrement())
+  credentialId String   @db.Uuid
+  lineCodeKey  String
+  userId       String   @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  at           DateTime @default(now())
+
+  @@index([at])
+  @@map("mikrotik_reveals")
+}
+
+model VpnCase {
+  id          String    @id @default(uuid()) @db.Uuid
+  clientUuid  String?   @unique @db.Uuid
+  filledAt    DateTime
+  ownerId     String    @db.Uuid
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  networkName String
+  ip          String
+  lat         Float?
+  lng         Float?
+  gpsAccuracy Float?
+  placeText   String?
+  suspects    String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+
+  @@index([ip])
+  @@map("vpn_cases")
+}
+
+enum CardLink {
+  VISIT
+  EXTERNAL
+  VPN
+  NONE
+}
+
+model CardPurchase {
+  id         String    @id @default(uuid()) @db.Uuid
+  clientUuid String?   @unique @db.Uuid
+  filledAt   DateTime
+  ownerId    String    @db.Uuid
+  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  name       String
+  ip         String?
+  price      Decimal   @db.Decimal(10, 2)
+  linkKind   CardLink  @default(NONE)
+  linkRef    String?   @db.Uuid // رقم الزيارة أو حالة VPN (أو رقمها من الجوال)
+  lat        Float?
+  lng        Float?
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
+
+  @@index([filledAt])
+  @@map("card_purchases")
 }

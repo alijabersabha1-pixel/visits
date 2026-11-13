@@ -22,5 +22,6 @@ export default async function setup() {
   const db = new Client({ connectionString: TEST_DATABASE_URL });
   await db.connect();
   await db.query(`CREATE TABLE "_seed_list_items" AS SELECT * FROM "list_items"`);
+  await db.query(`CREATE TABLE "_seed_mikrotik_questions" AS SELECT * FROM "mikrotik_questions"`);
   await db.end();
 }

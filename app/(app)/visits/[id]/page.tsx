@@ -8,6 +8,8 @@ import { formOptions } from "@/lib/form-options";
 import { formatDay } from "@/lib/dates";
 import { fmtDay, RecBadge } from "@/components/visit-ui";
 import { DecideButtons, DeleteVisitButton, RestoreVisitButton, StatusEditor } from "@/components/VisitActions";
+import { GpsLink, MikrotikAnswers, Photos } from "@/components/FieldExtras";
+import type { MikrotikAnswer } from "@/lib/mikrotik";
 
 export const metadata: Metadata = { title: "زيارة" };
 
@@ -66,7 +68,7 @@ export default async function VisitPage({
     },
   });
   if (!v) notFound();
-  const [options, history, companions] = await Promise.all([
+  const [options, history, companions, photos] = await Promise.all([
     formOptions(),
     prisma.auditLog.findMany({
       where: { entity: "Visit", entityId: id },
@@ -75,7 +77,10 @@ export default async function VisitPage({
       include: { actor: { select: { displayName: true } } },
     }),
     prisma.user.findMany({ where: { id: { in: v.companionIds } }, select: { displayName: true } }),
+    prisma.attachment.findMany({ where: { entity: "Visit", entityId: id }, select: { id: true }, orderBy: { createdAt: "asc" } }),
   ]);
+  const mikrotik = (v.mikrotik as MikrotikAnswer[] | null) ?? null;
+  const fromField = v.lat !== null || photos.length > 0 || (mikrotik?.length ?? 0) > 0 || v.filledAt !== null;
   const decision = reportEditDecision(me, v);
   const deleted = !!v.deletedAt;
   const pending = v.editRequests.filter((r) => r.status === "PENDING");
@@ -192,6 +197,36 @@ export default async function VisitPage({
             <div className="small muted">نتيجة الفحوصات</div>
             <p className="prose-box">{v.result ?? "—"}</p>
           </div>
+          {fromField && (
+            <div className="grid" style={{ gap: 10 }}>
+              <dl className="kv">
+                {v.filledAt && (
+                  <div>
+                    <dt>وقت التعبئة بالميدان</dt>
+                    <dd>{timeFmt.format(v.filledAt)}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt>الموقع</dt>
+                  <dd>
+                    <GpsLink lat={v.lat} lng={v.lng} accuracy={v.gpsAccuracy} />
+                  </dd>
+                </div>
+              </dl>
+              {mikrotik && mikrotik.length > 0 && (
+                <div>
+                  <div className="small muted">أسئلة المايكروتيك</div>
+                  <MikrotikAnswers answers={mikrotik} />
+                </div>
+              )}
+              {photos.length > 0 && (
+                <div>
+                  <div className="small muted">الصور</div>
+                  <Photos ids={photos.map((p) => p.id)} />
+                </div>
+              )}
+            </div>
+          )}
           {v.revisitNote && (
             <div>
               <div className="small muted">ملاحظة إعادة الزيارة (من الإكسل)</div>

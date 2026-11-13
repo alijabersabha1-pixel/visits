@@ -11,3 +11,4 @@ lib/generated/
 *.tsbuildinfo
 next-env.d.ts
 legacy-review/
+data/
