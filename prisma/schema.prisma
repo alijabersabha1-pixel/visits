@@ -11,8 +11,8 @@ datasource db {
 }
 
 enum Role {
-  AMBASSADOR // سفير
-  ADMIN // مسؤول
+  AMBASSADOR // سفير: بيعمل كل شي
+  MANAGER // مسؤول: بيشوف كل شي للقراءة بس
 }
 
 model User {

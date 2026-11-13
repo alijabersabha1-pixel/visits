@@ -1,10 +1,11 @@
 /**
- * ينشئ أول مسؤول بالنظام.
+ * ينشئ حساب من سطر الأوامر. أول حساب بالنظام لازم يكون سفير، لأن السفراء بس بيديروا الحسابات.
  *
- *   npm run create-admin -- --username ali --name "علي جبر"
+ *   npm run create-user -- --username ali --name "علي جبر"
+ *   npm run create-user -- --username boss --name "المسؤول" --role MANAGER
  *
  * كلمة السر بتنطلب من الشاشة (ما بتنكتب بالأمر عشان ما تنحفظ بتاريخ الأوامر).
- * للتشغيل الآلي (الاختبارات) ممكن تنعطى بـ ADMIN_PASSWORD.
+ * للتشغيل الآلي (الاختبارات) ممكن تنعطى بـ USER_PASSWORD.
  */
 import "dotenv/config";
 import { parseArgs } from "node:util";
@@ -26,13 +27,17 @@ async function askHidden(question: string): Promise<string> {
 
 async function main() {
   const { values } = parseArgs({
-    options: { username: { type: "string" }, name: { type: "string" } },
+    options: {
+      username: { type: "string" },
+      name: { type: "string" },
+      role: { type: "string", default: "AMBASSADOR" },
+    },
   });
   if (!values.username || !values.name) {
-    console.error('الاستخدام: npm run create-admin -- --username ali --name "علي جبر"');
+    console.error('الاستخدام: npm run create-user -- --username ali --name "علي جبر" [--role AMBASSADOR|MANAGER]');
     process.exit(1);
   }
-  let password = process.env.ADMIN_PASSWORD;
+  let password = process.env.USER_PASSWORD;
   if (!password) {
     password = await askHidden("كلمة السر: ");
     const again = await askHidden("أعد كتابتها: ");
@@ -41,11 +46,18 @@ async function main() {
       process.exit(1);
     }
   }
-  const input = createUserSchema.parse({ username: values.username, displayName: values.name, role: "ADMIN", password });
+  const input = createUserSchema.parse({
+    username: values.username,
+    displayName: values.name,
+    role: values.role,
+    password,
+  });
   const db = createPrisma();
   try {
     const { user } = await createUser(null, input, db);
-    console.log(`تم إنشاء المسؤول ${user.displayName} (${user.username})`);
+    console.log(
+      `تم إنشاء الحساب ${user.displayName} (${user.username}) — ${user.role === "MANAGER" ? "مسؤول" : "سفير"}`,
+    );
   } finally {
     await db.$disconnect();
   }

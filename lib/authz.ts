@@ -3,9 +3,10 @@
  * والواجهة بتسأل نفس الدوال بس عشان تخفي الأزرار — مش عشان الحماية.
  *
  * المرجع: جدول «المستخدمون والصلاحيات» بالمواصفات.
+ * السفير بيعمل كل شي، والمسؤول بيشوف كل شي للقراءة بس (تصحيح علي 2026-11-13).
  */
 
-export type Role = "AMBASSADOR" | "ADMIN";
+export type Role = "AMBASSADOR" | "MANAGER";
 
 export interface Actor {
   id: string;
@@ -13,35 +14,36 @@ export interface Actor {
   active: boolean;
 }
 
-/** صلاحيات ما بتعتمد على سجل معيّن */
-export type Permission =
-  | "visits:view" // يشوف كل الزيارات ويبحث بالـ Line Code
-  | "visits:create" // يسجل زيارة جديدة
-  | "visits:editStatus" // يغيّر التوصية والإجراء وإعادة الزيارة لأي زيارة
-  | "visits:delete" // حذف ناعم لسلة المحذوفات
-  | "users:manage" // يضيف حسابات ويوقفها
-  | "lists:manage" // يعدّل القوائم وأسئلة المايكروتيك
-  | "subscribers:import" // يستورد ملف المشتركين الشهري
-  | "audit:view" // يشوف سجل التعديلات الكامل للنظام
-  | "mikrotik:reveal" // يشوف كلمة سر مايكروتيك (السفراء بس)
-  | "mikrotik:revealLog"; // يشوف سجل عرض كلمات السر (السفراء بس)
+/** صلاحيات القراءة: للسفير والمسؤول */
+export const READ_PERMISSIONS = [
+  "visits:view", // يشوف كل الزيارات ويبحث بالـ Line Code
+  "stats:view", // الخريطة والرئيسية والإحصائيات
+  "audit:view", // سجل التعديلات
+  "export", // تصدير PDF وExcel
+  "users:view", // قائمة الحسابات
+] as const;
 
-const MATRIX: Record<Permission, readonly Role[]> = {
-  "visits:view": ["AMBASSADOR", "ADMIN"],
-  "visits:create": ["AMBASSADOR", "ADMIN"],
-  "visits:editStatus": ["AMBASSADOR", "ADMIN"],
-  "visits:delete": ["ADMIN"],
-  "users:manage": ["ADMIN"],
-  "lists:manage": ["ADMIN"],
-  "subscribers:import": ["ADMIN"],
-  "audit:view": ["ADMIN"],
-  "mikrotik:reveal": ["AMBASSADOR"],
-  "mikrotik:revealLog": ["AMBASSADOR"],
-};
+/** صلاحيات التغيير: للسفير بس */
+export const WRITE_PERMISSIONS = [
+  "visits:mine", // صفحة «زياراتي»
+  "visits:create", // زيارة جديدة، VPN، بطاقة
+  "visits:editStatus", // التوصية والإجراء وإعادة الزيارة لأي زيارة
+  "visits:delete", // حذف ناعم لسلة المحذوفات
+  "users:manage", // يضيف حسابات ويوقفها
+  "lists:manage", // القوائم وأسئلة المايكروتيك
+  "subscribers:import", // الملف الشهري والحساب الطارئ
+  "mikrotik:reveal", // يشوف كلمة سر مايكروتيك
+  "mikrotik:revealLog", // يشوف سجل عرض كلمات السر
+] as const;
+
+export type Permission = (typeof READ_PERMISSIONS)[number] | (typeof WRITE_PERMISSIONS)[number];
+
+const READ_SET: ReadonlySet<Permission> = new Set(READ_PERMISSIONS);
 
 export function can(actor: Actor | null | undefined, permission: Permission): boolean {
   if (!actor || !actor.active) return false;
-  return MATRIX[permission].includes(actor.role);
+  if (actor.role === "AMBASSADOR") return true;
+  return READ_SET.has(permission);
 }
 
 /** تقرير الزيارة: ملك السفير اللي كتبه */
@@ -53,14 +55,13 @@ export type ReportEditDecision = "allowed" | "request" | "denied";
 
 /**
  * مين بيعدّل تقرير زيارة؟
- * - صاحبها: مباشرة
- * - زيارة قديمة بدون صاحب: المسؤول مباشرة، والسفير لا
- * - تقرير غيره: بطلب تعديل يوافق عليه صاحبها (للسفير والمسؤول)
+ * - المسؤول: ولا مرة
+ * - صاحبها، أو أي سفير إذا كانت زيارة قديمة بدون صاحب: مباشرة
+ * - تقرير سفير تاني: بطلب تعديل يوافق عليه صاحبها
  */
 export function reportEditDecision(actor: Actor | null | undefined, visit: VisitReportOwner): ReportEditDecision {
-  if (!actor || !actor.active) return "denied";
-  if (visit.ownerId === null) return actor.role === "ADMIN" ? "allowed" : "denied";
-  if (visit.ownerId === actor.id) return "allowed";
+  if (!actor || !actor.active || actor.role !== "AMBASSADOR") return "denied";
+  if (visit.ownerId === null || visit.ownerId === actor.id) return "allowed";
   return "request";
 }
 

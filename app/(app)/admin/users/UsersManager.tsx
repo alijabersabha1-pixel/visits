@@ -3,12 +3,13 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { patchJson, postJson } from "@/components/fetcher";
+import { ROLE_HINT, ROLE_LABEL } from "@/lib/roles";
 
 export interface UserRow {
   id: string;
   username: string;
   displayName: string;
-  role: "ADMIN" | "AMBASSADOR";
+  role: "MANAGER" | "AMBASSADOR";
   active: boolean;
   locked: boolean;
   lockedUntil: string | null;
@@ -18,17 +19,30 @@ export interface UserRow {
   lastSeenAt: string | null;
 }
 
-const ROLE_LABEL = { ADMIN: "مسؤول", AMBASSADOR: "سفير" } as const;
-
 const dateFmt = new Intl.DateTimeFormat("ar-PS-u-nu-latn", { dateStyle: "medium", timeStyle: "short" });
 
 type Dialog =
   | { kind: "add" }
   | { kind: "edit"; user: UserRow }
-  | { kind: "confirm"; title: string; body: string; action: () => Promise<string | null>; danger?: boolean; cta: string }
+  | {
+      kind: "confirm";
+      title: string;
+      body: string;
+      action: () => Promise<string | null>;
+      danger?: boolean;
+      cta: string;
+    }
   | { kind: "password"; user: Pick<UserRow, "displayName" | "username">; password: string; isNew: boolean };
 
-export function UsersManager({ initialUsers, meId }: { initialUsers: UserRow[]; meId: string }) {
+export function UsersManager({
+  initialUsers,
+  meId,
+  canManage,
+}: {
+  initialUsers: UserRow[];
+  meId: string;
+  canManage: boolean;
+}) {
   const router = useRouter();
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
@@ -103,9 +117,13 @@ export function UsersManager({ initialUsers, meId }: { initialUsers: UserRow[]; 
           <h2>
             الحسابات <span className="muted small">({users.length})</span>
           </h2>
-          <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
-            إضافة مستخدم
-          </button>
+          {canManage ? (
+            <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
+              إضافة مستخدم
+            </button>
+          ) : (
+            <span className="badge badge-gray">للاطلاع فقط</span>
+          )}
         </div>
         <div className="table-wrap">
           <table className="table stack">
@@ -115,9 +133,11 @@ export function UsersManager({ initialUsers, meId }: { initialUsers: UserRow[]; 
                 <th>الدور</th>
                 <th>الحالة</th>
                 <th>آخر نشاط</th>
-                <th>
-                  <span className="sr-only">إجراءات</span>
-                </th>
+                {canManage && (
+                  <th>
+                    <span className="sr-only">إجراءات</span>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -133,13 +153,21 @@ export function UsersManager({ initialUsers, meId }: { initialUsers: UserRow[]; 
                       </div>
                     </td>
                     <td data-label="الدور">
-                      <span className={`badge ${u.role === "ADMIN" ? "badge-blue" : "badge-green"}`}>{ROLE_LABEL[u.role]}</span>
+                      <span
+                        className={`badge ${u.role === "MANAGER" ? "badge-blue" : "badge-green"}`}
+                        title={ROLE_HINT[u.role]}
+                      >
+                        {ROLE_LABEL[u.role]}
+                      </span>
                     </td>
                     <td data-label="الحالة">
                       {!u.active ? (
                         <span className="badge badge-gray">موقوف</span>
                       ) : u.locked ? (
-                        <span className="badge badge-red" title={u.lockedUntil ? dateFmt.format(new Date(u.lockedUntil)) : undefined}>
+                        <span
+                          className="badge badge-red"
+                          title={u.lockedUntil ? dateFmt.format(new Date(u.lockedUntil)) : undefined}
+                        >
                           مقفل مؤقتاً
                         </span>
                       ) : u.mustChangePassword ? (
@@ -152,28 +180,33 @@ export function UsersManager({ initialUsers, meId }: { initialUsers: UserRow[]; 
                       {u.lastSeenAt ? dateFmt.format(new Date(u.lastSeenAt)) : "—"}
                       {u.sessionCount > 1 && <div>{u.sessionCount} أجهزة</div>}
                     </td>
-                    <td className="cell-actions">
-                      <div className="actions">
-                        <button className="btn btn-ghost btn-sm" onClick={() => setDialog({ kind: "edit", user: u })}>
-                          تعديل
-                        </button>
-                        {!isMe && (
-                          <>
-                            <button className="btn btn-ghost btn-sm" onClick={() => confirmReset(u)}>
-                              كلمة سر مؤقتة
-                            </button>
-                            {u.sessionCount > 0 && (
-                              <button className="btn btn-ghost btn-sm" onClick={() => confirmRevoke(u)}>
-                                طرد من كل الأجهزة
+                    {canManage && (
+                      <td className="cell-actions">
+                        <div className="actions">
+                          <button className="btn btn-ghost btn-sm" onClick={() => setDialog({ kind: "edit", user: u })}>
+                            تعديل
+                          </button>
+                          {!isMe && (
+                            <>
+                              <button className="btn btn-ghost btn-sm" onClick={() => confirmReset(u)}>
+                                كلمة سر مؤقتة
                               </button>
-                            )}
-                            <button className={`btn btn-sm ${u.active ? "btn-danger" : "btn-ghost"}`} onClick={() => confirmToggle(u)}>
-                              {u.active ? "إيقاف" : "تفعيل"}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+                              {u.sessionCount > 0 && (
+                                <button className="btn btn-ghost btn-sm" onClick={() => confirmRevoke(u)}>
+                                  طرد من كل الأجهزة
+                                </button>
+                              )}
+                              <button
+                                className={`btn btn-sm ${u.active ? "btn-danger" : "btn-ghost"}`}
+                                onClick={() => confirmToggle(u)}
+                              >
+                                {u.active ? "إيقاف" : "تفعيل"}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -251,7 +284,7 @@ function UserFormDialog({
     setError(null);
     const f = new FormData(e.currentTarget);
     const displayName = String(f.get("displayName") ?? "");
-    const role = String(f.get("role") ?? (user?.role ?? "AMBASSADOR"));
+    const role = String(f.get("role") ?? user?.role ?? "AMBASSADOR");
     if (editing) {
       const res = await patchJson<{ user: UserRow }>(`/api/users/${user.id}`, { displayName, role });
       setBusy(false);
@@ -281,24 +314,43 @@ function UserFormDialog({
           )}
           <div className="field">
             <label htmlFor="displayName">الاسم</label>
-            <input id="displayName" name="displayName" className="input" defaultValue={user?.displayName} required autoFocus />
+            <input
+              id="displayName"
+              name="displayName"
+              className="input"
+              defaultValue={user?.displayName}
+              required
+              autoFocus
+            />
           </div>
           {!editing && (
             <div className="field">
               <label htmlFor="new-username">اسم الدخول</label>
-              <input id="new-username" name="username" className="input" dir="ltr" autoCapitalize="none" spellCheck={false} required />
+              <input
+                id="new-username"
+                name="username"
+                className="input"
+                dir="ltr"
+                autoCapitalize="none"
+                spellCheck={false}
+                required
+              />
               <span className="hint">بالإنجليزي، متل ahmad.s — ما بيتغيّر بعدين</span>
             </div>
           )}
           <div className="field">
             <label htmlFor="role">الدور</label>
             <select id="role" name="role" className="select" defaultValue={user?.role ?? "AMBASSADOR"} disabled={isMe}>
-              <option value="AMBASSADOR">سفير</option>
-              <option value="ADMIN">مسؤول</option>
+              <option value="AMBASSADOR">سفير — بيعمل كل شي</option>
+              <option value="MANAGER">مسؤول — للقراءة بس</option>
             </select>
             {isMe && <span className="hint">ما بتقدر تغيّر دورك أنت.</span>}
           </div>
-          {!editing && <p className="muted small" style={{ margin: 0 }}>النظام بيعطيه كلمة سر مؤقتة بتشوفها بعد الحفظ، وبيغيّرها أول ما يدخل.</p>}
+          {!editing && (
+            <p className="muted small" style={{ margin: 0 }}>
+              النظام بيعطيه كلمة سر مؤقتة بتشوفها بعد الحفظ، وبيغيّرها أول ما يدخل.
+            </p>
+          )}
         </div>
         <div className="modal-foot">
           <button className="btn btn-primary" type="submit" disabled={busy}>

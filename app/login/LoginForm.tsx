@@ -22,7 +22,7 @@ export function LoginForm() {
       return;
     }
     // تحميل كامل عن قصد بعد الدخول
-     
+
     window.location.assign(res.data.mustChangePassword ? "/account/password" : "/");
   }
 
@@ -49,7 +49,15 @@ export function LoginForm() {
       </div>
       <div className="field">
         <label htmlFor="password">كلمة السر</label>
-        <input id="password" name="password" type="password" className="input" dir="ltr" autoComplete="current-password" required />
+        <input
+          id="password"
+          name="password"
+          type="password"
+          className="input"
+          dir="ltr"
+          autoComplete="current-password"
+          required
+        />
       </div>
       <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
         {busy ? "لحظة…" : "دخول"}

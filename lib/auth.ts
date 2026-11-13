@@ -61,12 +61,16 @@ export async function login(
         data: { failedLoginCount: next.failedLoginCount, lockedUntil: next.lockedUntil },
       });
       if (next.justLocked) {
-        await logEvent(null, {
-          action: "LOCKED",
-          entity: "User",
-          entityId: user.id,
-          note: `قفل مؤقت بعد ${next.failedLoginCount} محاولات خاطئة`,
-        }, db);
+        await logEvent(
+          null,
+          {
+            action: "LOCKED",
+            entity: "User",
+            entityId: user.id,
+            note: `قفل مؤقت بعد ${next.failedLoginCount} محاولات خاطئة`,
+          },
+          db,
+        );
         return { ok: false, reason: "locked", minutes: minutesLeft(next, now) };
       }
     }
@@ -78,7 +82,12 @@ export async function login(
   await db.$transaction([
     db.user.update({ where: { id: user.id }, data: afterSuccess() }),
     db.session.create({
-      data: { tokenHash: hashToken(token), userId: user.id, expiresAt, userAgent: opts.userAgent?.slice(0, 300) ?? null },
+      data: {
+        tokenHash: hashToken(token),
+        userId: user.id,
+        expiresAt,
+        userAgent: opts.userAgent?.slice(0, 300) ?? null,
+      },
     }),
     db.auditLog.create({ data: { actorId: user.id, action: "LOGIN", entity: "User", entityId: user.id } }),
   ]);
@@ -120,7 +129,9 @@ export async function logout(token: string | undefined | null, db: Db = defaultP
   if (!session) return;
   await db.$transaction([
     db.session.delete({ where: { id: session.id } }),
-    db.auditLog.create({ data: { actorId: session.userId, action: "LOGOUT", entity: "User", entityId: session.userId } }),
+    db.auditLog.create({
+      data: { actorId: session.userId, action: "LOGOUT", entity: "User", entityId: session.userId },
+    }),
   ]);
 }
 

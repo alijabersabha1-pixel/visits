@@ -4,8 +4,11 @@ import { prisma } from "@/lib/db";
 import { createUser, createUserSchema, publicUserSelect } from "@/lib/users";
 
 export const GET = handler(async (req) => {
-  await apiRequire(req, "users:manage");
-  const users = await prisma.user.findMany({ select: publicUserSelect, orderBy: [{ active: "desc" }, { createdAt: "asc" }] });
+  await apiRequire(req, "users:view");
+  const users = await prisma.user.findMany({
+    select: publicUserSelect,
+    orderBy: [{ active: "desc" }, { createdAt: "asc" }],
+  });
   return NextResponse.json({ users });
 });
 

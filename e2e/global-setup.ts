@@ -3,9 +3,9 @@ import { migrate } from "../scripts/migrate.mjs";
 import { createPrisma } from "../lib/db";
 import { createUser } from "../lib/users";
 import { E2E_DATABASE_URL } from "../playwright.config";
-import { ADMIN } from "./fixtures";
+import { ALI, BOSS } from "./fixtures";
 
-/** قاعدة بيانات نظيفة لكل تشغيل، فيها مسؤول واحد بس */
+/** قاعدة بيانات نظيفة لكل تشغيل، فيها سفير (علي) ومسؤول للقراءة */
 export default async function setup() {
   const url = new URL(E2E_DATABASE_URL);
   const dbName = url.pathname.slice(1);
@@ -20,6 +20,15 @@ export default async function setup() {
 
   await migrate(E2E_DATABASE_URL, () => {});
   const db = createPrisma(E2E_DATABASE_URL);
-  await createUser(null, { username: ADMIN.username, displayName: ADMIN.name, role: "ADMIN", password: ADMIN.password }, db);
+  await createUser(
+    null,
+    { username: ALI.username, displayName: ALI.name, role: "AMBASSADOR", password: ALI.password },
+    db,
+  );
+  await createUser(
+    null,
+    { username: BOSS.username, displayName: BOSS.name, role: "MANAGER", password: BOSS.password },
+    db,
+  );
   await db.$disconnect();
 }

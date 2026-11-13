@@ -31,6 +31,7 @@ const FIELD_LABEL: Record<string, string> = {
 };
 
 const VALUE_LABEL: Record<string, string> = {
+  MANAGER: "مسؤول",
   ADMIN: "مسؤول",
   AMBASSADOR: "سفير",
   true: "نعم",
@@ -168,11 +169,15 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                 {rows.map((r) => {
                   const action = ACTION_LABEL[r.action] ?? { text: r.action, tone: "badge-gray" };
                   const target =
-                    r.entity === "User" ? names.get(r.entityId) ?? r.entityId : `${ENTITY_LABEL[r.entity] ?? r.entity} ${r.entityId}`;
+                    r.entity === "User"
+                      ? (names.get(r.entityId) ?? r.entityId)
+                      : `${ENTITY_LABEL[r.entity] ?? r.entity} ${r.entityId}`;
                   return (
                     <tr key={r.id.toString()}>
                       <td className="cell-main small">{fmt.format(r.at)}</td>
-                      <td data-label="الشخص">{r.actorId ? names.get(r.actorId) ?? "؟" : <span className="muted">النظام</span>}</td>
+                      <td data-label="الشخص">
+                        {r.actorId ? (names.get(r.actorId) ?? "؟") : <span className="muted">النظام</span>}
+                      </td>
                       <td data-label="العملية">
                         <span className={`badge ${action.tone}`}>{action.text}</span>
                       </td>

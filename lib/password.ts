@@ -24,12 +24,6 @@ export function getDummyHash(): Promise<string> {
   return dummyHash;
 }
 
-export function passwordProblem(password: string): string | null {
-  if (password.length < MIN_PASSWORD_LENGTH) return `كلمة السر لازم تكون ${MIN_PASSWORD_LENGTH} أحرف على الأقل`;
-  if (password.length > 200) return "كلمة السر طويلة كتير";
-  return null;
-}
-
 /** كلمة سر مؤقتة سهلة القراءة: بدون أحرف متشابهة متل 0 وO و1 وl */
 export function generateTempPassword(length = 10): string {
   const alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";

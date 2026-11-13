@@ -279,9 +279,8 @@ h2 {
   text-decoration: none;
 }
 .brand-mark {
-  width: 36px;
-  height: 36px;
   flex: none;
+  object-fit: contain;
 }
 .brand-text {
   line-height: 1.2;
@@ -630,8 +629,7 @@ dialog.modal::backdrop {
   padding: 24px 16px;
   background:
     radial-gradient(1200px 500px at 110% -10%, var(--green-soft), transparent 60%),
-    radial-gradient(900px 500px at -10% 110%, var(--blue-soft), transparent 60%),
-    var(--bg);
+    radial-gradient(900px 500px at -10% 110%, var(--blue-soft), transparent 60%), var(--bg);
 }
 .auth-card {
   width: min(400px, 100%);
@@ -642,7 +640,7 @@ dialog.modal::backdrop {
   gap: 16px;
 }
 .auth-title {
-  margin-top: 8px;
+  margin-top: 14px;
 }
 .auth-foot {
   text-align: center;

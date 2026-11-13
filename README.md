@@ -5,12 +5,14 @@
 
 **الحالة:** المرحلة 1 (الأساس) خلصت: الدخول، الأدوار، إدارة المستخدمين، سجل التعديلات.
 
+**الأدوار:** السفير بيعمل كل شي، والمسؤول بيشوف كل شي للقراءة بس.
+
 ## التشغيل على سيرفر (Docker)
 
 ```bash
-cp .env.example .env          # وعدّل DB_PASSWORD وAPP_ORIGIN
+cp .env.example .env          # واضبط DB_PASSWORD (إجباري) وAPP_ORIGIN
 docker compose up -d --build  # قاعدة البيانات + الموقع، والـ migrations بتنطبق لحالها
-docker compose run --rm tools npm run create-admin -- --username ali --name "علي جبر"
+docker compose run --rm tools npm run create-user -- --username ali --name "علي جبر"
 ```
 
 على أي سيرفر عليه HTTPS لازم `COOKIE_SECURE=true` و`APP_ORIGIN=https://…`.
@@ -23,7 +25,8 @@ docker compose run --rm tools npm run create-admin -- --username ali --name "ع�
 npm ci
 cp .env.example .env
 npm run db:migrate
-npm run create-admin -- --username ali --name "علي جبر"
+npm run create-user -- --username ali --name "علي جبر"                      # سفير
+npm run create-user -- --username boss --name "المسؤول" --role MANAGER    # مسؤول للقراءة
 npm run dev                   # http://localhost:3000
 ```
 
@@ -49,6 +52,6 @@ npm run test:e2e              # اختبارات المتصفح (قاعدة visi
 | `lib/audit.ts` | `withAudit`: الحفظ والسجل بعملية وحدة |
 | `lib/users.ts` | إدارة المستخدمين |
 | `prisma/` | تعريف قاعدة البيانات والـ migrations (SQL) |
-| `scripts/` | الـ migrations وإنشاء أول مسؤول |
+| `scripts/` | الـ migrations وإنشاء أول حساب |
 | `tests/` · `e2e/` | اختبارات الوحدات واختبارات المتصفح |
 | `docs/decisions.md` | القرارات اللي اتخذناها أثناء البناء |

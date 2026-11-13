@@ -17,7 +17,7 @@ const MAIN: Item[] = [
   { href: "/cards", label: "البطاقات", soon: true },
 ];
 
-const ADMIN: Item[] = [
+const MANAGE: Item[] = [
   { href: "/admin/users", label: "المستخدمون" },
   { href: "/admin/audit", label: "سجل التعديلات" },
 ];
@@ -41,17 +41,17 @@ function NavItem({ item, path }: { item: Item; path: string }) {
   );
 }
 
-export function Nav({ isAdmin }: { isAdmin: boolean }) {
+export function Nav({ showAdmin }: { showAdmin: boolean }) {
   const path = usePathname();
   return (
     <nav className="nav">
       {MAIN.map((i) => (
         <NavItem key={i.href} item={i} path={path} />
       ))}
-      {isAdmin && (
+      {showAdmin && (
         <>
           <div className="nav-group">الإدارة</div>
-          {ADMIN.map((i) => (
+          {MANAGE.map((i) => (
             <NavItem key={i.href} item={i} path={path} />
           ))}
         </>

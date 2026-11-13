@@ -30,6 +30,8 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "same-origin" },
           { key: "Permissions-Policy", value: "camera=(self), geolocation=(self), microphone=()" },
+          // المتصفحات بتتجاهله على http، وبيشتغل لحاله أول ما يصير الموقع على https
+          { key: "Strict-Transport-Security", value: "max-age=31536000" },
         ],
       },
     ];

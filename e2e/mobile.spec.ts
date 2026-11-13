@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { loginAsAdmin } from "./fixtures";
+import { loginAsAli } from "./fixtures";
 
 test("على شاشة 360px: القائمة بتنفتح وما في تمرير أفقي", async ({ page }) => {
-  await loginAsAdmin(page);
+  await loginAsAli(page);
   for (const path of ["/", "/admin/users", "/admin/audit"]) {
     await page.goto(path);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

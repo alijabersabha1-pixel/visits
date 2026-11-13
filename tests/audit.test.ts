@@ -32,7 +32,7 @@ describe("withAudit", () => {
   beforeEach(resetDb);
 
   it("التعديل بينتج سطر سجل بالقيم الصحيحة", async () => {
-    const admin = await makeUser("admin", "ADMIN");
+    const admin = await makeUser("admin");
     const amb = await makeUser("amb");
     await prisma.$executeRawUnsafe(`ALTER TABLE "audit_log" DISABLE TRIGGER USER`);
     await prisma.$executeRawUnsafe(`DELETE FROM "audit_log"`);
@@ -58,7 +58,7 @@ describe("withAudit", () => {
   });
 
   it("إذا فشل الحفظ ما بينكتب سجل", async () => {
-    const admin = await makeUser("admin", "ADMIN");
+    const admin = await makeUser("admin");
     const before = await prisma.auditLog.count();
     await expect(
       withAudit(admin.id, async (tx, audit) => {
@@ -104,7 +104,9 @@ describe("السجل للإلحاق فقط (من قاعدة البيانات ن�
   it("UPDATE وDELETE وTRUNCATE بينرفضوا", async () => {
     await makeUser("amb");
     const row = await prisma.auditLog.findFirstOrThrow();
-    await expect(prisma.auditLog.update({ where: { id: row.id }, data: { note: "تلاعب" } })).rejects.toThrow(/append-only/);
+    await expect(prisma.auditLog.update({ where: { id: row.id }, data: { note: "تلاعب" } })).rejects.toThrow(
+      /append-only/,
+    );
     await expect(prisma.auditLog.delete({ where: { id: row.id } })).rejects.toThrow(/append-only/);
     await expect(prisma.auditLog.deleteMany({})).rejects.toThrow(/append-only/);
     await expect(prisma.$executeRawUnsafe(`TRUNCATE "audit_log"`)).rejects.toThrow(/append-only/);

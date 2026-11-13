@@ -14,10 +14,12 @@
     "test:e2e": "playwright test",
     "db:migrate": "node scripts/migrate.mjs",
     "db:generate": "prisma generate",
-    "create-admin": "tsx scripts/create-admin.ts",
     "postinstall": "prisma generate",
     "test:all": "npm run lint && npm run typecheck && npm test && npm run build && npm run test:e2e",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "create-user": "tsx scripts/create-user.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": ">=22"
@@ -44,6 +46,7 @@
     "dotenv": "^18.0.10",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.4.6",
+    "prettier": "^3.10.1",
     "prisma": "^7.10.1",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",

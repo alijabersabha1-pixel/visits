@@ -12,12 +12,13 @@ function startOfToday() {
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ denied?: string }> }) {
   const user = await requireUser();
   const { denied } = await searchParams;
-  const isAdmin = can(user, "users:manage");
+  const showStats = can(user, "stats:view");
+  const canManage = can(user, "users:manage");
 
-  const [ambassadors, admins, changesToday] = isAdmin
+  const [ambassadors, managers, changesToday] = showStats
     ? await Promise.all([
         prisma.user.count({ where: { role: "AMBASSADOR", active: true } }),
-        prisma.user.count({ where: { role: "ADMIN", active: true } }),
+        prisma.user.count({ where: { role: "MANAGER", active: true } }),
         prisma.auditLog.count({ where: { at: { gte: startOfToday() } } }),
       ])
     : [0, 0, 0];
@@ -33,11 +34,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
       {denied && (
         <div className="alert alert-warn" role="alert" style={{ marginBottom: 16 }}>
-          الصفحة اللي طلبتها للمسؤولين بس.
+          ما عندك صلاحية لهالصفحة.
         </div>
       )}
 
-      {isAdmin && (
+      {showStats && (
         <div className="grid grid-3" style={{ marginBottom: 16 }}>
           <div className="card stat">
             <div className="label">سفراء فعّالين</div>
@@ -45,7 +46,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           </div>
           <div className="card stat">
             <div className="label">مسؤولين فعّالين</div>
-            <div className="value">{admins}</div>
+            <div className="value">{managers}</div>
           </div>
           <div className="card stat">
             <div className="label">عمليات بالسجل اليوم</div>
@@ -61,8 +62,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <h2>شو الجاهز هلأ</h2>
         <ul className="muted" style={{ margin: "10px 0 0", paddingInlineStart: 20 }}>
           <li>الدخول بالحساب الشخصي، والخروج، وتغيير كلمة السر</li>
-          {isAdmin && <li>إدارة المستخدمين: إضافة، تغيير الدور، إيقاف، كلمة سر مؤقتة، طرد من كل الأجهزة</li>}
-          {isAdmin && <li>سجل التعديلات بفلتر حسب الشخص والتاريخ</li>}
+          {canManage ? (
+            <li>إدارة المستخدمين: إضافة، تغيير الدور، إيقاف، كلمة سر مؤقتة، طرد من كل الأجهزة</li>
+          ) : (
+            <li>قائمة المستخدمين للاطلاع</li>
+          )}
+          <li>سجل التعديلات بفلتر حسب الشخص والتاريخ</li>
         </ul>
       </div>
     </>

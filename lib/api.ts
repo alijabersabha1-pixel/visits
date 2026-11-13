@@ -59,7 +59,10 @@ export function handler<C = unknown>(fn: Handler<C>): Handler<C> {
       if (err instanceof ZodError) {
         const first = err.issues[0];
         return NextResponse.json(
-          { error: first?.message ?? "بيانات غير صحيحة", details: err.issues.map((i) => ({ path: i.path, message: i.message })) },
+          {
+            error: first?.message ?? "بيانات غير صحيحة",
+            details: err.issues.map((i) => ({ path: i.path, message: i.message })),
+          },
           { status: 400 },
         );
       }

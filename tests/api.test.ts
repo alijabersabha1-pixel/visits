@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiRequire, apiUser, checkOrigin, handler, parseBody, ApiError } from "@/lib/api";
 import { login, SESSION_COOKIE } from "@/lib/auth";
-import { passwordProblem, generateTempPassword, verifyPassword } from "@/lib/password";
+import { generateTempPassword, verifyPassword } from "@/lib/password";
 import { resetDb, makeUser } from "./helpers";
 
 const BASE = "http://app.test";
@@ -69,24 +69,22 @@ describe("handler", () => {
 describe("apiUser / apiRequire", () => {
   beforeEach(resetDb);
 
-  it("401 بدون جلسة، و403 بدون صلاحية", async () => {
+  it("401 بدون جلسة، و403 للمسؤول على أي عملية بتغيّر", async () => {
     await expect(apiUser(req("GET"))).rejects.toMatchObject({ status: 401 });
-    await makeUser("amb");
-    const r = await login("amb", "correct-horse-1");
+    await makeUser("boss", "MANAGER");
+    const r = await login("boss", "correct-horse-1");
     if (!r.ok) throw new Error();
     const u = await apiUser(req("GET", { cookie: r.token }));
-    expect(u.username).toBe("amb");
+    expect(u.username).toBe("boss");
     await expect(apiRequire(req("GET", { cookie: r.token }), "users:manage")).rejects.toMatchObject({ status: 403 });
-    await expect(apiRequire(req("GET", { cookie: r.token }), "visits:create")).resolves.toMatchObject({ username: "amb" });
+    await expect(apiRequire(req("GET", { cookie: r.token }), "visits:create")).rejects.toMatchObject({ status: 403 });
+    await expect(apiRequire(req("GET", { cookie: r.token }), "audit:view")).resolves.toMatchObject({
+      username: "boss",
+    });
   });
 });
 
 describe("كلمات السر", () => {
-  it("الطول", () => {
-    expect(passwordProblem("short")).toContain("8");
-    expect(passwordProblem("x".repeat(201))).toContain("طويلة");
-    expect(passwordProblem("long-enough")).toBeNull();
-  });
   it("المؤقتة بدون أحرف متشابهة", () => {
     for (let i = 0; i < 50; i++) expect(generateTempPassword()).toMatch(/^[a-km-np-zA-HJ-NP-Z2-9]{10}$/);
   });

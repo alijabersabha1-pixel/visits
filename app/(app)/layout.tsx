@@ -3,14 +3,13 @@ import { can } from "@/lib/authz";
 import { Brand, BrandMark } from "@/components/Brand";
 import { Nav } from "@/components/Nav";
 import { LogoutButton } from "@/components/LogoutButton";
-
-const ROLE_LABEL = { ADMIN: "مسؤول", AMBASSADOR: "سفير" } as const;
+import { ROLE_LABEL } from "@/lib/roles";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // كل صفحة بتفحص الدخول والصلاحية بنفسها كمان (requireUser / requirePermission)
   const user = await requireUser({ passwordPage: true });
 
-  const isAdmin = can(user, "users:manage");
+  const showAdmin = can(user, "users:view") || can(user, "audit:view");
   const foot = (
     <div className="sidebar-foot">
       <span className="avatar" aria-hidden="true">
@@ -30,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="sidebar-head">
           <Brand />
         </div>
-        <Nav isAdmin={isAdmin} />
+        <Nav showAdmin={showAdmin} />
         {foot}
       </aside>
 
@@ -48,7 +47,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </svg>
           </span>
         </summary>
-        <Nav isAdmin={isAdmin} />
+        <Nav showAdmin={showAdmin} />
         {foot}
       </details>
 

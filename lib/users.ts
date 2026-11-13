@@ -20,7 +20,7 @@ export const usernameSchema = z
   );
 
 const displayNameSchema = z.string().trim().min(2, "اكتب الاسم").max(80, "الاسم طويل");
-const roleSchema = z.enum(["AMBASSADOR", "ADMIN"]);
+const roleSchema = z.enum(["AMBASSADOR", "MANAGER"]);
 const passwordSchema = z
   .string()
   .min(MIN_PASSWORD_LENGTH, `كلمة السر لازم تكون ${MIN_PASSWORD_LENGTH} أحرف على الأقل`)
@@ -61,18 +61,23 @@ export const publicUserSelect = {
 
 const AUDITED_FIELDS = ["username", "displayName", "role", "active"] as const;
 
-async function assertAdminRemains(tx: Tx, changingUserId: string, next: { role?: string; active?: boolean }) {
+/** السفراء بس بيديروا الحسابات، فلازم يضل سفير فعّال واحد على الأقل */
+async function assertAmbassadorRemains(tx: Tx, changingUserId: string, next: { role?: string; active?: boolean }) {
   const target = await tx.user.findUnique({ where: { id: changingUserId } });
   if (!target) throw notFound();
-  const losesAdmin =
-    target.role === "ADMIN" && target.active && (next.role === "AMBASSADOR" || next.active === false);
-  if (!losesAdmin) return target;
-  const otherAdmins = await tx.user.count({ where: { role: "ADMIN", active: true, id: { not: changingUserId } } });
-  if (otherAdmins === 0) throw new ApiError(409, "لازم يضل مسؤول واحد فعّال على الأقل");
+  const losesAmbassador =
+    target.role === "AMBASSADOR" && target.active && (next.role === "MANAGER" || next.active === false);
+  if (!losesAmbassador) return target;
+  const others = await tx.user.count({ where: { role: "AMBASSADOR", active: true, id: { not: changingUserId } } });
+  if (others === 0) throw new ApiError(409, "لازم يضل سفير فعّال واحد على الأقل، لأنه هو اللي بيدير الحسابات");
   return target;
 }
 
-export async function createUser(actorId: string | null, input: z.infer<typeof createUserSchema>, db: Db = defaultPrisma) {
+export async function createUser(
+  actorId: string | null,
+  input: z.infer<typeof createUserSchema>,
+  db: Db = defaultPrisma,
+) {
   const tempPassword = input.password ? null : generateTempPassword();
   const passwordHash = await hashPassword(input.password ?? tempPassword!);
   const user = await withAudit(
@@ -113,10 +118,10 @@ export async function updateUser(
   return withAudit(
     actorId,
     async (tx, audit) => {
-      if (actorId === userId && (input.active === false || input.role === "AMBASSADOR")) {
-        throw new ApiError(409, "ما بتقدر توقف حسابك أو تشيل صلاحية المسؤول عن حالك");
+      if (actorId === userId && (input.active === false || (input.role !== undefined && input.role !== "AMBASSADOR"))) {
+        throw new ApiError(409, "ما بتقدر توقف حسابك أو تغيّر دورك");
       }
-      const before = await assertAdminRemains(tx, userId, input);
+      const before = await assertAmbassadorRemains(tx, userId, input);
       const after = await tx.user.update({ where: { id: userId }, data: input, select: publicUserSelect });
       audit.updated("User", userId, before, after, { fields: AUDITED_FIELDS });
       // الإيقاف بيطرد المستخدم من كل الأجهزة

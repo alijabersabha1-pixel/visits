@@ -1,5 +1,5 @@
 # docker compose up -d   ← قاعدة البيانات والموقع
-# أول مرة بس: docker compose run --rm tools npm run create-admin -- --username ali --name "علي جبر"
+# أول مرة بس: docker compose run --rm tools npm run create-user -- --username ali --name "علي جبر"
 
 services:
   db:
@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: visits
       POSTGRES_USER: visits
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-me}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD لازم ينضبط بملف .env}
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -23,7 +23,7 @@ services:
     depends_on:
       db: { condition: service_healthy }
     environment:
-      DATABASE_URL: postgresql://visits:${DB_PASSWORD:-change-me}@db:5432/visits
+      DATABASE_URL: postgresql://visits:${DB_PASSWORD:?DB_PASSWORD لازم ينضبط بملف .env}@db:5432/visits
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
     ports:
@@ -35,7 +35,7 @@ services:
     depends_on:
       db: { condition: service_healthy }
     environment:
-      DATABASE_URL: postgresql://visits:${DB_PASSWORD:-change-me}@db:5432/visits
+      DATABASE_URL: postgresql://visits:${DB_PASSWORD:?DB_PASSWORD لازم ينضبط بملف .env}@db:5432/visits
 
 volumes:
   db-data:

@@ -12,7 +12,7 @@ export async function resetDb() {
 
 export async function makeUser(
   username: string,
-  role: "ADMIN" | "AMBASSADOR" = "AMBASSADOR",
+  role: "MANAGER" | "AMBASSADOR" = "AMBASSADOR",
   password = "correct-horse-1",
 ) {
   const { user } = await createUser(null, { username, displayName: username, role, password });

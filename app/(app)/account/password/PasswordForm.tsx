@@ -51,16 +51,41 @@ export function PasswordForm() {
       )}
       <div className="field">
         <label htmlFor="currentPassword">كلمة السر الحالية</label>
-        <input id="currentPassword" name="currentPassword" type="password" className="input" dir="ltr" autoComplete="current-password" required />
+        <input
+          id="currentPassword"
+          name="currentPassword"
+          type="password"
+          className="input"
+          dir="ltr"
+          autoComplete="current-password"
+          required
+        />
       </div>
       <div className="field">
         <label htmlFor="newPassword">كلمة السر الجديدة</label>
-        <input id="newPassword" name="newPassword" type="password" className="input" dir="ltr" autoComplete="new-password" minLength={8} required />
+        <input
+          id="newPassword"
+          name="newPassword"
+          type="password"
+          className="input"
+          dir="ltr"
+          autoComplete="new-password"
+          minLength={8}
+          required
+        />
         <span className="hint">8 أحرف على الأقل</span>
       </div>
       <div className="field">
         <label htmlFor="confirm">أعد كتابة كلمة السر الجديدة</label>
-        <input id="confirm" name="confirm" type="password" className="input" dir="ltr" autoComplete="new-password" required />
+        <input
+          id="confirm"
+          name="confirm"
+          type="password"
+          className="input"
+          dir="ltr"
+          autoComplete="new-password"
+          required
+        />
       </div>
       <div>
         <button className="btn btn-primary" type="submit" disabled={busy}>

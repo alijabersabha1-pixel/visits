@@ -16,7 +16,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate && npm run build
 
-# الأدوات (إنشاء أول مسؤول وغيره): docker compose run --rm tools npm run create-admin -- ...
+# الأدوات (إنشاء أول حساب وغيره): docker compose run --rm tools npm run create-user -- ...
 FROM builder AS tools
 
 FROM node:22-bookworm-slim AS runner
