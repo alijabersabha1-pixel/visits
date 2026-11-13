@@ -13,3 +13,5 @@ next-env.d.ts
 legacy-review/
 data/
 .tmp/
+backups/
+import/

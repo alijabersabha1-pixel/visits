@@ -1,5 +1,6 @@
-# docker compose up -d   ← قاعدة البيانات والموقع
+# docker compose up -d --build   ← قاعدة البيانات والموقع (الـ migrations بتنطبق لحالها)
 # أول مرة بس: docker compose run --rm tools npm run create-user -- --username ali --name "علي جبر"
+# نسخة احتياطية: docker compose run --rm backup          (دليل كامل: docs/deploy.md)
 
 services:
   db:
@@ -7,10 +8,13 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: visits
-      POSTGRES_USER: visits
+      POSTGRES_USER: visits # مالك الجداول: للـ migrations والأدوات بس
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD لازم ينضبط بملف .env}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?APP_DB_PASSWORD لازم ينضبط بملف .env}
     volumes:
       - db-data:/var/lib/postgresql/data
+      # أول تشغيل بس: بينشئ مستخدم الموقع visits_app
+      - ./deploy/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U visits -d visits"]
       interval: 5s
@@ -23,7 +27,10 @@ services:
     depends_on:
       db: { condition: service_healthy }
     environment:
-      DATABASE_URL: postgresql://visits:${DB_PASSWORD:?DB_PASSWORD لازم ينضبط بملف .env}@db:5432/visits
+      # الموقع بيشتغل بمستخدم مش مالك الجداول: ما بيقدر يعدّل أو يمسح سجل التعديلات
+      DATABASE_URL: postgresql://visits_app:${APP_DB_PASSWORD}@db:5432/visits
+      MIGRATE_DATABASE_URL: postgresql://visits:${DB_PASSWORD}@db:5432/visits
+      APP_DB_ROLE: visits_app
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       TRUST_PROXY: ${TRUST_PROXY:-false}
@@ -42,7 +49,28 @@ services:
     depends_on:
       db: { condition: service_healthy }
     environment:
-      DATABASE_URL: postgresql://visits:${DB_PASSWORD:?DB_PASSWORD لازم ينضبط بملف .env}@db:5432/visits
+      DATABASE_URL: postgresql://visits:${DB_PASSWORD}@db:5432/visits
+      MIKROTIK_KEY: ${MIKROTIK_KEY:-}
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+      - ./import:/import # ملفات الإكسل للنقل، والتقرير بيطلع هون
+
+  backup:
+    build: { context: ., target: backup }
+    profiles: ["tools"]
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql://visits:${DB_PASSWORD}@db:5432/visits
+      UPLOAD_DIR: /data/uploads
+      BACKUP_DIR: /backups
+      BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:?BACKUP_PASSPHRASE لازم ينضبط بملف .env}
+      BACKUP_KEEP: ${BACKUP_KEEP:-30}
+    volumes:
+      - uploads:/data/uploads
+      - ${BACKUP_HOST_DIR:-./backups}:/backups
+    command: ["sh", "/scripts/backup.sh"]
 
 volumes:
   db-data:

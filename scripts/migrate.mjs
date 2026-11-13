@@ -71,16 +71,53 @@ export async function migrate(databaseUrl, log = console.log) {
   return applied;
 }
 
+/**
+ * صلاحيات مستخدم الموقع بقاعدة البيانات (مش مالك الجداول):
+ * قراءة وكتابة عادية، بس سجل التعديلات وسجل عرض كلمات السر إضافة وقراءة بس.
+ * مش مالك، فما بيقدر يطفي المحفّزات ولا يغيّر الجداول.
+ *
+ * @param {string} databaseUrl اتصال المالك
+ * @param {string} role اسم مستخدم الموقع
+ */
+export async function grantAppRole(databaseUrl, role) {
+  if (!/^[a-z_][a-z0-9_]{0,62}$/.test(role)) throw new Error(`Invalid APP_DB_ROLE "${role}"`);
+  const client = new Client({ connectionString: databaseUrl });
+  await client.connect();
+  try {
+    const exists = await client.query("SELECT 1 FROM pg_roles WHERE rolname = $1", [role]);
+    if (exists.rowCount === 0) throw new Error(`Database role "${role}" does not exist`);
+    const r = `"${role}"`;
+    await client.query(`GRANT USAGE ON SCHEMA public TO ${r}`);
+    await client.query(`GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${r}`);
+    await client.query(`GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO ${r}`);
+    for (const t of ["audit_log", "mikrotik_reveals"]) {
+      await client.query(`REVOKE UPDATE, DELETE, TRUNCATE ON "${t}" FROM ${r}`);
+    }
+    // جداول الـ migrations للمالك بس
+    await client.query(`REVOKE ALL ON "_app_migrations" FROM ${r}`);
+  } finally {
+    await client.end();
+  }
+}
+
 if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   // ملف .env (للتطوير). على Docker المتغيرات بتيجي من docker-compose.
   if (!process.env.DATABASE_URL && existsSync(".env")) process.loadEnvFile(".env");
-  const url = process.env.DATABASE_URL;
+  // الـ migrations بتنطبق باتصال المالك إذا موجود، والموقع بيشتغل باتصال مستخدم أقل صلاحيات
+  const url = process.env.MIGRATE_DATABASE_URL || process.env.DATABASE_URL;
   if (!url) {
     console.error("DATABASE_URL is not set");
     process.exit(1);
   }
-  migrate(url).catch((err) => {
-    console.error(err.message);
-    process.exit(1);
-  });
+  migrate(url)
+    .then(async () => {
+      if (process.env.APP_DB_ROLE) {
+        await grantAppRole(url, process.env.APP_DB_ROLE);
+        console.log(`permissions granted to ${process.env.APP_DB_ROLE}`);
+      }
+    })
+    .catch((err) => {
+      console.error(err.message);
+      process.exit(1);
+    });
 }

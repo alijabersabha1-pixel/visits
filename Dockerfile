@@ -19,6 +19,11 @@ RUN npx prisma generate && npm run build
 # الأدوات (إنشاء أول حساب وغيره): docker compose run --rm tools npm run create-user -- ...
 FROM builder AS tools
 
+# النسخ الاحتياطي: pg_dump من نفس نسخة Postgres + openssl للتشفير
+FROM postgres:16-bookworm AS backup
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+COPY scripts/backup.sh scripts/restore.sh /scripts/
+
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0 \

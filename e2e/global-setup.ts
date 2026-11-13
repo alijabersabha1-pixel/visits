@@ -1,5 +1,5 @@
 import { Client } from "pg";
-import { migrate } from "../scripts/migrate.mjs";
+import { grantAppRole, migrate } from "../scripts/migrate.mjs";
 import { createPrisma } from "../lib/db";
 import { createUser } from "../lib/users";
 import { E2E_DATABASE_URL } from "../playwright.config";
@@ -19,6 +19,7 @@ export default async function setup() {
   await client.end();
 
   await migrate(E2E_DATABASE_URL, () => {});
+  if (process.env.E2E_APP_ROLE) await grantAppRole(E2E_DATABASE_URL, process.env.E2E_APP_ROLE);
   const db = createPrisma(E2E_DATABASE_URL);
   await createUser(
     null,

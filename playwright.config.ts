@@ -41,7 +41,8 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 60_000,
     env: {
-      DATABASE_URL: E2E_DATABASE_URL,
+      // E2E_APP_DATABASE_URL: تشغيل الموقع بمستخدم قاعدة بيانات أقل صلاحيات (متل الإنتاج)
+      DATABASE_URL: process.env.E2E_APP_DATABASE_URL || E2E_DATABASE_URL,
       APP_ORIGIN: baseURL,
       PORT: String(PORT),
       HOSTNAME: "127.0.0.1",
