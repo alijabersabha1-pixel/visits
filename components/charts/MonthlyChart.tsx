@@ -130,8 +130,17 @@ export function MonthlyChart({ months: input }: { months: Month[] }) {
             );
           })}
         </svg>
-        {h && (
-          <div className="tooltip" role="status">
+        {h && hover !== null && (
+          <div
+            className="tooltip"
+            role="status"
+            // جنب العمود: إذا العمود بالنص اليمين، التلميح على شماله، والعكس
+            style={
+              x(hover) + barW / 2 > W / 2
+                ? { top: 8, left: Math.max(0, x(hover) - 196), right: "auto" }
+                : { top: 8, left: Math.min(W - 190, x(hover) + barW + 8), right: "auto" }
+            }
+          >
             <b>{monthLong.format(new Date(`${h.month}-01T00:00:00Z`))}</b>
             <div className="tooltip-total">{h.total} زيارة</div>
             {series

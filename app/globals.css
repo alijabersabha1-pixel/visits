@@ -986,7 +986,6 @@ a.card.stat:hover {
 .tooltip {
   position: absolute;
   top: 0;
-  inset-inline-start: 0;
   background: var(--surface);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);

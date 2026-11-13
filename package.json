@@ -20,7 +20,9 @@
     "create-user": "tsx scripts/create-user.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "import:legacy": "tsx scripts/import-legacy.ts"
+    "import:legacy": "tsx scripts/import-legacy.ts",
+    "seed:demo": "tsx scripts/seed-demo.ts",
+    "security:check": "node scripts/security-check.mjs"
   },
   "engines": {
     "node": ">=22"
